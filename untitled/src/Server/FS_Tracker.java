@@ -1,3 +1,4 @@
+package Server;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -5,15 +6,16 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
-
+import cmd.Chunk;
 public class FS_Tracker {
+
     Map<String, Map<Integer, String>> catalogo_chunks;
 
     public FS_Tracker(){
         this.catalogo_chunks = new HashMap<>();
     }
 
-    public void Conexão(String port) {
+    public void conexao(String port) {
         Chunk chunk = null;
         try{
             DatagramSocket socket = new DatagramSocket(Integer.parseInt(port));

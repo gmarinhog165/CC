@@ -1,6 +1,6 @@
+package Client;
 import java.net.*;
 import cmd.Chunk;
-
 public class FS_Node {
 
     public void conexao(String ip, String port){
