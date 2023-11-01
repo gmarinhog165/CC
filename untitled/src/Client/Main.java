@@ -1,8 +1,10 @@
 package Client;
 
+import java.net.UnknownHostException;
+
 public class Main {
-    public static void main (String[] args){
+    public static void main (String[] args) throws UnknownHostException {
         FS_Node node = new FS_Node();
-        node.conexao(args[0], args[1]);
+        node.connectionServerTCP(args[0], args[1]);
     }
 }

@@ -1,22 +1,44 @@
 package Client;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.UnknownHostException;
+import java.io.OutputStream;
 import java.net.*;
+import java.util.Arrays;
+
 import cmd.Chunk;
+
 public class FS_Node {
 
-    public void conexao(String ip, String port){
-        try{
-            DatagramSocket socket = new DatagramSocket(Integer.parseInt(port));
-            System.out.println("Abri um socket e estou à escuta na porta: " + port);
-            byte[] buffer = new byte[2048];
-            byte[] dados = "notas.md".getBytes();
+    public void connectionServerTCP(String ip, String port) {
+        int serverPort = Integer.parseInt(port);
+        try {
+            Socket socket = new Socket(ip, serverPort);
+            System.out.println("Connected to the server at " + ip + ":" + serverPort);
 
-            InetAddress serverAddress = InetAddress.getByName(ip);
+            // Create and send data as needed
+            byte[] dados = "notas.md".getBytes();
             Chunk data = new Chunk(dados, dados.length, 0, true, (byte) 2);
-            byte[] dados2 = Chunk.serializeObject(data);
-            DatagramPacket sendPacket = new DatagramPacket(dados2, dados2.length, serverAddress, Integer.parseInt(port));
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        } catch (UnknownHostException e) {
+            byte[] serializedData = Chunk.serializeObject(data);
+
+            OutputStream out = socket.getOutputStream();
+            out.write(serializedData);
+            out.flush();
+
+            // Receive data from the server
+            InputStream in = socket.getInputStream();
+            byte[] receiveBuffer = new byte[2048]; // Adjust the buffer size as needed
+            int bytesRead;
+
+            while ((bytesRead = in.read(receiveBuffer)) != -1) {
+                // Process the received data from the server
+                byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
+                //Chunk receivedData = Chunk.deserializeObject(Arrays.copyOf(receiveBuffer, bytesRead));
+                System.out.println("Received chunk with message " + new String(receivedData));
+            }
+
+            socket.close();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
