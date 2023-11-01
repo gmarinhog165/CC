@@ -29,7 +29,7 @@ public class ClientHandler implements Runnable{
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
                 // dar deserialize para chunk
-                Chunk data = Chunk.deserializeObject(Arrays.copyOf(buffer, bytesRead));
+                Chunk data = Chunk.fromByteArray(Arrays.copyOf(buffer, bytesRead));
                 System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
 
                 // para responder

@@ -19,7 +19,7 @@ public class FS_Node {
             // Create and send data as needed
             byte[] dados = "notas.md".getBytes();
             Chunk data = new Chunk(dados, dados.length, 0, true, (byte) 2);
-            byte[] serializedData = Chunk.serializeObject(data);
+            byte[] serializedData = Chunk.toByteArray(data);
 
             OutputStream out = socket.getOutputStream();
             out.write(serializedData);
