@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Map;
 
 public class ClientHandler implements Runnable{
     private Socket clientSocket;
@@ -25,12 +24,17 @@ public class ClientHandler implements Runnable{
             OutputStream out = clientSocket.getOutputStream();
 
             // forma de ler dados do cliente, está correta?
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[1000]; // limitamos em 1000 para o chunk nao exceder 1000 bytes no deserialize
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
+
                 // dar deserialize para chunk
                 Chunk data = Chunk.fromByteArray(Arrays.copyOf(buffer, bytesRead));
                 System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
+
+                // exit message
+                if(data.getMsg() == (byte) 5)
+                    break;
 
                 // para responder
                 // messageManager()
@@ -39,7 +43,6 @@ public class ClientHandler implements Runnable{
                 out.flush();
             }
 
-            // fechar o socket qd acabar
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,19 +1,20 @@
 package Server;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import cmd.Chunk;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class FS_Tracker {
 
     /**
      * Map com key sendo o nome do file
      * Value outro Map
      * * Cuja Key é o nº do chunk
-     * * Valor é o IP do Node que tem o Chunk
+     * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
     Map<String, Map<Integer, List<String>>> catalogo_chunks;
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();

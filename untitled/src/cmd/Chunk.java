@@ -1,9 +1,10 @@
 package cmd;
 
-import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-public class Chunk implements Serializable {
+public class Chunk {
 
     /**
      * array de bytes que vai conter os dados do file (max 1500 bytes -> MTU Ethernet)
@@ -54,10 +55,10 @@ public class Chunk implements Serializable {
      */
     public Chunk(byte msg) {
         this.msg = msg;
-        this.data = new byte[0]; // Initialize 'data' to an empty byte array
-        this.length = 0; // Initialize 'length' to 0
-        this.offset = 0; // Initialize 'offset' to 0
-        this.last = false; // Initialize 'last' to false
+        this.data = new byte[0];
+        this.length = 0;
+        this.offset = 0;
+        this.last = false;
     }
 
     public byte[] getData() {
@@ -107,10 +108,10 @@ public class Chunk implements Serializable {
 //        }
 //    }
 
-    // Manually convert the Chunk object to a byte array
+
     public static byte[] toByteArray(Chunk chunk) {
         int len = chunk.getLength();
-        byte[] result = new byte[12 + len]; // 12 bytes for fields, plus payload length
+        byte[] result = new byte[10 + len]; // 12 bytes for fields, plus payload length
 
         // Convert 'length' (4 bytes)
         result[0] = (byte) (len >> 24);
@@ -140,7 +141,11 @@ public class Chunk implements Serializable {
         return result;
     }
 
-    // Manually create a Chunk object from a byte array
+    /**
+     * Cria um Chunk manualmente a partir de um byte[]
+     * @param bytes
+     * @return
+     */
     public static Chunk fromByteArray(byte[] bytes) {
         if (bytes.length < 12) {
             throw new IllegalArgumentException("Input byte array is too short");
@@ -162,6 +167,28 @@ public class Chunk implements Serializable {
         byte[] data = Arrays.copyOfRange(bytes, 10, bytes.length);
 
         return new Chunk(data, length, offset, last, msg);
+    }
+
+    public static List<Chunk> fromPath(byte[] bytes) {
+        List<Chunk> chunks = new ArrayList<>();
+        int offset = 0;
+        int remainingLength = bytes.length;
+
+        while (remainingLength > 0) {
+            int chunkSize = Math.min(990, remainingLength);
+            byte[] chunkData = Arrays.copyOfRange(bytes, offset, offset + chunkSize);
+            boolean isLast = remainingLength <= 990;
+
+            byte msg = (byte) 2;
+
+            Chunk chunk = new Chunk(chunkData, chunkSize, offset, isLast, msg);
+            chunks.add(chunk);
+
+            offset += chunkSize;
+            remainingLength -= chunkSize;
+        }
+
+        return chunks;
     }
 
 }

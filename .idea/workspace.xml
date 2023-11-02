@@ -2,13 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6c5eefcb-e543-4076-8987-4f677b3d2a14" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/client/FS_Node.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/Chunk.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/Chunk.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/FS_Tracker.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Main.java" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/untitled/src/Client/ServerSend.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/src/Client/FS_Node.java" beforeDir="false" afterPath="$PROJECT_DIR$/untitled/src/Client/FS_Node.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/src/Server/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/untitled/src/Server/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/src/Server/FS_Tracker.java" beforeDir="false" afterPath="$PROJECT_DIR$/untitled/src/Server/FS_Tracker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/src/cmd/Chunk.java" beforeDir="false" afterPath="$PROJECT_DIR$/untitled/src/cmd/Chunk.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +48,8 @@
       <updated>1698770575526</updated>
       <workItem from="1698770576501" duration="84000" />
       <workItem from="1698770693069" duration="48000" />
+      <workItem from="1698958300403" duration="18000" />
+      <workItem from="1698958321475" duration="37000" />
     </task>
     <servers />
   </component>
