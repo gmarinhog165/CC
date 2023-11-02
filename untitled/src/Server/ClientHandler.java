@@ -33,7 +33,7 @@ public class ClientHandler implements Runnable{
                 System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
 
                 // exit message
-                if(data.getMsg() == (byte) 5)
+                if(data.getMsg() == (byte) 4)
                     break;
 
                 // para responder

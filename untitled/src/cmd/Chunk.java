@@ -147,7 +147,7 @@ public class Chunk {
      * @return
      */
     public static Chunk fromByteArray(byte[] bytes) {
-        if (bytes.length < 12) {
+        if (bytes.length < 10) {
             throw new IllegalArgumentException("Input byte array is too short");
         }
 

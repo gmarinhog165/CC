@@ -21,18 +21,16 @@ public class ServerSend implements Runnable{
      * Método responsável por interagir com o utilizador e responder consoante isso.
      */
     public void run() {
+        Scanner scan = new Scanner(System.in);
         try {
-            Scanner scan = new Scanner(System.in);
+
             while(true){
                 String input = scan.nextLine();
                 List<Chunk> message = inputMessageManager(input);
-
-                if(message.size() == 1 && message.get(0).getMsg() == 4)
-                    break;
-
                 if(message == null){
                     System.out.println("O comando introduzido é inválido!");
                 }
+
                 else{
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     for(Chunk c : message){
@@ -45,10 +43,14 @@ public class ServerSend implements Runnable{
                     OutputStream out = socket.getOutputStream();
                     out.write(serializedData);
                     out.flush();
+                    if(message.size() == 1 && message.get(0).getMsg() == (byte) 4)
+                        break;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            scan.close();
         }
     }
 
