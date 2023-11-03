@@ -16,7 +16,8 @@ public class FS_Tracker {
      * * Cuja Key é o nº do chunk
      * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
-    Map<String, Map<Integer, List<String>>> catalogo_chunks;
+    private Map<String, Map<Integer, List<String>>> catalogo_chunks;
+    // -> Map<Integer, SHA-1>
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
     Lock writel = catalogo.writeLock();
     Lock readl = catalogo.readLock();

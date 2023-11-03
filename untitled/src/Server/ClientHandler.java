@@ -10,11 +10,9 @@ import java.util.Arrays;
 
 public class ClientHandler implements Runnable{
     private Socket clientSocket;
-    private FS_Tracker server;
 
     public ClientHandler(Socket clientSocket, FS_Tracker server) {
         this.clientSocket = clientSocket;
-        this.server = server;
     }
 
     @Override

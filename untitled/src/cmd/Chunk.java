@@ -7,7 +7,7 @@ import java.util.List;
 public class Chunk {
 
     /**
-     * array de bytes que vai conter os dados do file (max 1500 bytes -> MTU Ethernet)
+     * array de bytes que vai conter os dados do file (max 1000 bytes -> MTU Ethernet)
      */
     private byte[] data; // dinâmico
 
@@ -169,7 +169,7 @@ public class Chunk {
         return new Chunk(data, length, offset, last, msg);
     }
 
-    public static List<Chunk> fromPath(byte[] bytes) {
+    public static List<Chunk> fromPath(byte[] bytes, byte msg) {
         List<Chunk> chunks = new ArrayList<>();
         int offset = 0;
         int remainingLength = bytes.length;
@@ -178,8 +178,6 @@ public class Chunk {
             int chunkSize = Math.min(990, remainingLength);
             byte[] chunkData = Arrays.copyOfRange(bytes, offset, offset + chunkSize);
             boolean isLast = remainingLength <= 990;
-
-            byte msg = (byte) 2;
 
             Chunk chunk = new Chunk(chunkData, chunkSize, offset, isLast, msg);
             chunks.add(chunk);
