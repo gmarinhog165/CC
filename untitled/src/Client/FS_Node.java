@@ -18,21 +18,11 @@ public class FS_Node {
 
             // send data
 
-            Thread sendData = new Thread(new ServerSend(socket));
-            sendData.start();
-            sendData.join();
-            // TO DO: receive data
-//
-//            InputStream in = socket.getInputStream();
-//            byte[] receiveBuffer = new byte[2048]; // Adjust the buffer size as needed
-//            int bytesRead;
-//
-//            while ((bytesRead = in.read(receiveBuffer)) != -1) {
-//                // received data
-//                byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
-//                //Chunk receivedData = Chunk.deserializeObject(Arrays.copyOf(receiveBuffer, bytesRead));
-//                System.out.println("Received chunk with message " + new String(receivedData));
-//            }
+            Thread sendDataToTracker = new Thread(new ServerSend(socket));
+            Thread receiveDataFromTracker = new Thread(new ServerReceive(socket));
+            sendDataToTracker.start();
+            receiveDataFromTracker.start();
+            sendDataToTracker.join();
 
             socket.close();
         } catch (IOException | InterruptedException e) {

@@ -38,7 +38,7 @@ public class ServerSend implements Runnable{
                         byteArrayOutputStream.write(data, 0, data.length);
                     }
 
-                    // envia os bytes todos, está correto ou devia enviar chunk a chunk?
+                    // envia os bytes todos, depois o tcp parte
                     byte[] serializedData = byteArrayOutputStream.toByteArray();
                     OutputStream out = socket.getOutputStream();
                     out.write(serializedData);
