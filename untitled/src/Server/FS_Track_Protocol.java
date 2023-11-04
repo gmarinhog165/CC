@@ -21,11 +21,7 @@ public class FS_Track_Protocol {
     public void connection (String port) {
         try {
             //
-            this.server.addChunkAssignment( "IP1", 1);
-            this.server.addChunkAssignment("IP2", 2);
-            this.server.addChunkAssignment("IP1", 3);
-            this.server.addChunkAssignment("IP2", 4);
-            this.server.addChunkAssignment("IP3", 5);
+            this.server.addChunkAssignment();
             //
 
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(port));

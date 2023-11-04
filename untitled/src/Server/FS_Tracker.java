@@ -18,16 +18,17 @@ public class FS_Tracker {
      * * Cuja Key é o nº do chunk
      * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
-    private Map<String, Map<Integer, List<String>>> catalogo_chunks;
+    private Map<String, Map<Integer, List<String>>> catalogo_chunks = new HashMap<>();
     /**
      * FUNÇÃO DE TESTE APENAS
-     * @param ipAddress
-     * @param chunkNumber
      */
-    public void addChunkAssignment(String ipAddress, int chunkNumber) {
-        this.catalogo_chunks.computeIfAbsent(ipAddress, k -> new HashMap<>())
-                .computeIfAbsent(chunkNumber, k -> new ArrayList<>())
-                .add("Owner");
+    public void addChunkAssignment() {
+        Map<Integer, List<String>> tmp = new HashMap<>();
+        List<String> asd = Arrays.asList("123.123.443", "999.3232.11");
+        List<String> asd2 = Arrays.asList("123.123.443");
+        tmp.put(1, asd);
+        tmp.put(2,asd2);
+        this.catalogo_chunks.put("IP1", tmp);
     }
     // -> Map<Integer, SHA-1>
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
