@@ -76,7 +76,8 @@ public class ServerReceive implements Runnable{
             String ip = d.getKey();
             List<Integer> chunks = d.getValue();
             for(int b : chunks){
-                threads[i++] = new Thread(new NodeSend(ip, b));
+                threads[i] = new Thread(new NodeSend(ip, b));
+                threads[i++].start();
             }
 
         }

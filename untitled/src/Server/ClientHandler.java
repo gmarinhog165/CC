@@ -37,19 +37,15 @@ public class ClientHandler implements Runnable{
                 else{
                     String file = new String(data.getData());
                     if(server.contains(file)){
-                        out.write(server.algoritmo(file));
-                        out.flush();
+                        server.algoritmo(file);
+                        //out.write(server.algoritmo(file));
+                        //out.flush();
                     }
                     else{
                         Chunk naoExiste = new Chunk((byte) 5);
                     }
 
                 }
-                // para responder
-                // messageManager()
-//                byte[] response = "obrigado".getBytes();
-//                out.write(response);
-//                out.flush();
             }
 
             clientSocket.close();

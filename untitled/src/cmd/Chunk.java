@@ -173,7 +173,7 @@ public class Chunk {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         for (Chunk chunk : chunks) {
-            byte[] chunkData = chunk.getData();
+            byte[] chunkData = Chunk.toByteArray(chunk);
             outputStream.write(chunkData, 0, chunkData.length);
         }
 
