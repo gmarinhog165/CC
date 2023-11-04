@@ -64,7 +64,7 @@ public class ServerSend implements Runnable{
         if(input.contains("GET ")){
             String file = input.replace("GET ", "");
             byte[] data = file.getBytes();
-            ret = Chunk.fromPath(data, (byte) 2);
+            ret = Chunk.fromByteArray(data, (byte) 2);
         }
         else if(input.toLowerCase().contains("exit")){
             Chunk tmp = new Chunk((byte) 4);

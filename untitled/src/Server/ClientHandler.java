@@ -29,14 +29,21 @@ public class ClientHandler implements Runnable{
             // List<Chunk> chunks = new ArrayList<>(); no caso de receber mais do que um chunk, mas acho q nao
             while ((bytesRead = in.read(buffer)) != -1) {
                 // dar deserialize para chunk
-                Chunk data = Chunk.fromByteArray(Arrays.copyOf(buffer, bytesRead));
+                Chunk data = Chunk.readByteArray(Arrays.copyOf(buffer, bytesRead));
                 System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
                 // exit message
                 if(data.getMsg() == (byte) 4)
                     break;
                 else{
-                    out.write(server.algoritmo(new String(data.getData())));
-                    out.flush();
+                    String file = new String(data.getData());
+                    if(server.contains(file)){
+                        out.write(server.algoritmo(file));
+                        out.flush();
+                    }
+                    else{
+                        Chunk naoExiste = new Chunk((byte) 5);
+                    }
+
                 }
                 // para responder
                 // messageManager()

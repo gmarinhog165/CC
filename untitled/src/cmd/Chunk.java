@@ -1,5 +1,6 @@
 package cmd;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,32 +82,6 @@ public class Chunk {
         return msg;
     }
 
-//    public static Chunk deserializeObject(byte[] data) {
-//        try {
-//            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-//            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-//            Object deserializedObject = objectInputStream.readObject();
-//            objectInputStream.close();
-//            return (Chunk) deserializedObject;
-//        } catch (IOException | ClassNotFoundException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
-//
-//    public static byte[] serializeObject(Chunk chunk) {
-//        try {
-//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-//            objectOutputStream.writeObject(chunk);
-//            objectOutputStream.flush();
-//            objectOutputStream.close();
-//            return byteArrayOutputStream.toByteArray();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return null; // Error occurred
-//        }
-//    }
 
 
     public static byte[] toByteArray(Chunk chunk) {
@@ -146,7 +121,7 @@ public class Chunk {
      * @param bytes
      * @return
      */
-    public static Chunk fromByteArray(byte[] bytes) {
+    public static Chunk readByteArray(byte[] bytes) {
         if (bytes.length < 10) {
             throw new IllegalArgumentException("Input byte array is too short");
         }
@@ -169,7 +144,7 @@ public class Chunk {
         return new Chunk(data, length, offset, last, msg);
     }
 
-    public static List<Chunk> fromPath(byte[] bytes, byte msg) {
+    public static List<Chunk> fromByteArray(byte[] bytes, byte msg) {
         List<Chunk> chunks = new ArrayList<>();
         int offset = 0;
         int remainingLength = bytes.length;
@@ -188,6 +163,23 @@ public class Chunk {
 
         return chunks;
     }
+
+    /**
+     * Transforma uma lista de chunks num byte[]
+     * @param chunks
+     * @return
+     */
+    public static byte[] concatenateChunks(List<Chunk> chunks) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        for (Chunk chunk : chunks) {
+            byte[] chunkData = chunk.getData();
+            outputStream.write(chunkData, 0, chunkData.length);
+        }
+
+        return outputStream.toByteArray();
+    }
+
 
 }
 

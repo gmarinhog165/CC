@@ -94,7 +94,7 @@ public class FS_Tracker {
         try{
             this.readl.lock();
             Map<Integer, List<String>> locDoFile = this.catalogo_chunks.get(file);
-            return serializeMap(balanceChunks(locDoFile));
+            return Chunk.concatenateChunks(Chunk.fromByteArray(serializeMap(balanceChunks(locDoFile)), (byte) 2));
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally{
@@ -148,6 +148,10 @@ public class FS_Tracker {
             objectOutputStream.writeObject(map);
             return byteArrayOutputStream.toByteArray();
         }
+    }
+
+    public boolean contains(String file){
+        return this.catalogo_chunks.containsKey(file);
     }
 
 }

@@ -27,7 +27,10 @@ public class ServerReceive implements Runnable{
             List<Chunk> chunksDoMap = new ArrayList<>();
             while ((bytesRead = in.read(receiveBuffer)) != -1) {
                 byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
-                Chunk data = Chunk.fromByteArray(receivedData);
+                Chunk data = Chunk.readByteArray(receivedData);
+                if(data.getMsg() == (byte) 5)
+                    continue;
+
                 chunksDoMap.add(data);
                 // quando chegar o último chunk começar o processo
                 if(data.isLast()){
