@@ -37,8 +37,12 @@ public class ClientHandler implements Runnable{
                 else{
                     String file = new String(data.getData());
                     if(server.contains(file)){
-                        out.write(server.algoritmo(file));
-                        out.flush();
+                        List<Chunk> chunks = server.algoritmo(file);
+                        for(Chunk c : chunks){
+                            out.write(Chunk.toByteArray(c));
+                            out.flush();
+                        }
+
                     }
                     else{
                         Chunk naoExiste = new Chunk((byte) 5);

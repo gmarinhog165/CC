@@ -23,13 +23,54 @@ public class FS_Tracker {
      * FUNÇÃO DE TESTE APENAS
      */
     public void addChunkAssignment() {
-        Map<Integer, List<String>> tmp = new HashMap<>();
-        List<String> asd = Arrays.asList("123.123.443", "999.3232.11");
-        List<String> asd2 = Arrays.asList("123.123.443");
-        tmp.put(1, asd);
-        tmp.put(2,asd2);
-        this.catalogo_chunks.put("IP1", tmp);
+        int targetSizeInBytes = 2000;
+        Map<String, Map<Integer, List<String>>> catalogo_chunks = new HashMap<>();
+        int currentSizeInBytes = 0;
+        String key = "IP1"; // The key you want to keep updating
+        int iteration = 0;
+
+        while (currentSizeInBytes < targetSizeInBytes) {
+            Map<Integer, List<String>> tmp = catalogo_chunks.getOrDefault(key, new HashMap<>());
+            List<String> asd = new ArrayList<>();
+
+            // Generate a larger list (you can adjust the size as needed)
+            for (int i = 0; i < 10; i++) {
+                asd.add("Value " + i);
+            }
+
+            tmp.put(iteration, asd);
+
+            catalogo_chunks.put(key, tmp);
+
+            // Calculate the size of the map and its contents
+            currentSizeInBytes = calculateMapSize(catalogo_chunks);
+
+            if (currentSizeInBytes >= targetSizeInBytes) {
+                break;
+            }
+
+            iteration++; // Increment the key or use another approach to control the size
+        }
+        this.catalogo_chunks = catalogo_chunks;
     }
+
+    private int calculateMapSize(Map<String, Map<Integer, List<String>>> map) {
+        // This method calculates the approximate size of the map and its contents in bytes
+        // You can implement this method based on your specific needs
+
+        // In a simplified example, you can count the number of entries and estimate the size
+        // based on an average size of a string key and the List of strings
+        int estimatedSize = 0;
+        for (Map.Entry<String, Map<Integer, List<String>>> entry : map.entrySet()) {
+            estimatedSize += entry.getKey().length(); // Key size
+            for (List<String> strings : entry.getValue().values()) {
+                estimatedSize += strings.size() * 12; // Average string size
+            }
+        }
+
+        return estimatedSize;
+    }
+
     // -> Map<Integer, SHA-1>
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
     Lock writel = catalogo.writeLock();
@@ -90,12 +131,12 @@ public class FS_Tracker {
      * @param file
      * @return
      */
-    public byte[] algoritmo(String file){
+    public List<Chunk> algoritmo(String file){
         Map<String, List<Integer>> locs = new HashMap<>();
         try{
             this.readl.lock();
             Map<Integer, List<String>> locDoFile = this.catalogo_chunks.get(file);
-            return Chunk.concatenateChunks(Chunk.fromByteArray(serializeMap(balanceChunks(locDoFile)), (byte) 2));
+            return (Chunk.fromByteArray(serializeMap(balanceChunks(locDoFile)), (byte) 2));
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally{

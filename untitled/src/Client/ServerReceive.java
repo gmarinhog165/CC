@@ -21,7 +21,7 @@ public class ServerReceive implements Runnable{
 
         try{
             InputStream in = socket.getInputStream();
-            byte[] receiveBuffer = new byte[1024];
+            byte[] receiveBuffer = new byte[2000];
             int bytesRead;
 
             List<Chunk> chunksDoMap = new ArrayList<>();

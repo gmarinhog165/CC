@@ -1,9 +1,12 @@
 package cmd;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class Chunk {
 
@@ -83,31 +86,32 @@ public class Chunk {
     }
 
 
-
+    /**
+     * Cria um byte[] a partir de um Chunk
+     * @param chunk
+     * @return
+     */
     public static byte[] toByteArray(Chunk chunk) {
         int len = chunk.getLength();
         byte[] result = new byte[10 + len]; // 12 bytes for fields, plus payload length
 
+        ByteBuffer buffer = ByteBuffer.wrap(result);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+
         // Convert 'length' (4 bytes)
-        result[0] = (byte) (len >> 24);
-        result[1] = (byte) (len >> 16);
-        result[2] = (byte) (len >> 8);
-        result[3] = (byte) len;
+        buffer.putInt(len);
 
         int offset = chunk.getOffset();
         // Convert 'offset' (4 bytes)
-        result[4] = (byte) (offset >> 24);
-        result[5] = (byte) (offset >> 16);
-        result[6] = (byte) (offset >> 8);
-        result[7] = (byte) offset;
+        buffer.putInt(offset);
 
         boolean last = chunk.isLast();
         // Convert 'last' (1 byte)
-        result[8] = (byte) (last ? 1 : 0);
+        buffer.put((byte) (last ? 1 : 0));
 
         byte msg = chunk.getMsg();
         // Convert 'msg' (1 byte)
-        result[9] = msg;
+        buffer.put(msg);
 
         byte[] data = chunk.getData();
         // Copy 'data' into the result
@@ -126,20 +130,28 @@ public class Chunk {
             throw new IllegalArgumentException("Input byte array is too short");
         }
 
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+
         // Extract 'length' (4 bytes)
-        int length = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+        int length = buffer.getInt();
+
+        // Validate the data size
+        if (bytes.length < 10 + length) {
+            throw new IllegalArgumentException("Incomplete data in the byte array");
+        }
 
         // Extract 'offset' (4 bytes)
-        int offset = (bytes[4] << 24) | (bytes[5] << 16) | (bytes[6] << 8) | bytes[7];
+        int offset = buffer.getInt();
 
         // Extract 'last' (1 byte)
-        boolean last = bytes[8] == 1;
+        boolean last = buffer.get() == 1;
 
         // Extract 'msg' (1 byte)
-        byte msg = bytes[9];
+        byte msg = buffer.get();
 
         // Extract 'data'
-        byte[] data = Arrays.copyOfRange(bytes, 10, bytes.length);
+        byte[] data = Arrays.copyOfRange(bytes, 10, 10 + length);
 
         return new Chunk(data, length, offset, last, msg);
     }
@@ -164,22 +176,37 @@ public class Chunk {
         return chunks;
     }
 
-    /**
-     * Transforma uma lista de chunks num byte[]
-     * @param chunks
-     * @return
-     */
-    public static byte[] concatenateChunks(List<Chunk> chunks) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        for (Chunk chunk : chunks) {
-            byte[] chunkData = Chunk.toByteArray(chunk);
-            outputStream.write(chunkData, 0, chunkData.length);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
         }
 
-        return outputStream.toByteArray();
+        Chunk chunk = (Chunk) o;
+
+        if (getLength() != chunk.getLength()) {
+            return false;
+        }
+        if (getOffset() != chunk.getOffset()) {
+            return false;
+        }
+        if (isLast() != chunk.isLast()) {
+            return false;
+        }
+        if (getMsg() != chunk.getMsg()) {
+            return false;
+        }
+        return Arrays.equals(getData(), chunk.getData());
     }
 
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(getLength(), getOffset(), isLast(), getMsg());
+        result = 31 * result + Arrays.hashCode(getData());
+        return result;
+    }
 
 }
 
