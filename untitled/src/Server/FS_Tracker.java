@@ -55,11 +55,6 @@ public class FS_Tracker {
     }
 
     private int calculateMapSize(Map<String, Map<Integer, List<String>>> map) {
-        // This method calculates the approximate size of the map and its contents in bytes
-        // You can implement this method based on your specific needs
-
-        // In a simplified example, you can count the number of entries and estimate the size
-        // based on an average size of a string key and the List of strings
         int estimatedSize = 0;
         for (Map.Entry<String, Map<Integer, List<String>>> entry : map.entrySet()) {
             estimatedSize += entry.getKey().length(); // Key size
@@ -80,6 +75,10 @@ public class FS_Tracker {
         this.catalogo_chunks = new HashMap<>();
     }
 
+    public Map<Integer, List<String>> getInfoFile(String file){
+        return this.catalogo_chunks.get(file);
+    }
+
     /**
      * Método que para a Mensagem 2 adiciona a informação que o novo
      * Node que se conectou traz ao catálogo do Tracker.
@@ -88,7 +87,7 @@ public class FS_Tracker {
      * @param chunk
      * @param ip
      */
-    public void writeFileOnHashMsg2(Chunk chunk, String ip){
+    public void writeFileOnHashMsg1(Chunk chunk, String ip){
         String name = new String(chunk.getData());
         int nchunks = chunk.getOffset();
         try{
@@ -126,72 +125,10 @@ public class FS_Tracker {
     }
 
     /**
-     * protótipo de algoritmo
-     *
+     * método para verificar se dado file existe no Tracker
      * @param file
      * @return
      */
-    public List<Chunk> algoritmo(String file){
-        Map<String, List<Integer>> locs = new HashMap<>();
-        try{
-            this.readl.lock();
-            Map<Integer, List<String>> locDoFile = this.catalogo_chunks.get(file);
-            return (Chunk.fromByteArray(serializeMap(balanceChunks(locDoFile)), (byte) 2));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally{
-            this.readl.unlock();
-        }
-    }
-
-    private static Map<String, List<Integer>> balanceChunks(Map<Integer, List<String>> chunkMap) {
-        // Extract the list of IP addresses from the chunkMap
-        List<String> ipAddresses = chunkMap.values().stream()
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // Initialize a map to store the load for each IP
-        Map<String, Integer> ipLoad = new HashMap<>();
-        for (String ipAddress : ipAddresses) {
-            ipLoad.put(ipAddress, 0);
-        }
-
-        // Sort the IP addresses by load in ascending order
-        ipAddresses.sort(Comparator.comparing(ipLoad::get));
-
-        // Initialize the result map
-        Map<String, List<Integer>> balancedChunks = new HashMap<>();
-        for (String ipAddress : ipAddresses) {
-            balancedChunks.put(ipAddress, new ArrayList<>());
-        }
-
-        for (Map.Entry<Integer, List<String>> entry : chunkMap.entrySet()) {
-            int chunkNumber = entry.getKey();
-            List<String> ipsWithChunk = entry.getValue();
-
-            // Find the IP with the lowest load
-            String minLoadIp = ipAddresses.get(0);
-
-            // Assign the chunk to the IP with the lowest load
-            balancedChunks.get(minLoadIp).add(chunkNumber);
-            ipLoad.put(minLoadIp, ipLoad.get(minLoadIp) + 1);
-
-            // Update the sorted IP addresses list
-            ipAddresses.sort(Comparator.comparing(ipLoad::get));
-        }
-
-        return balancedChunks;
-    }
-
-    private byte[] serializeMap(Map<String, List<Integer>> map) throws IOException {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
-            objectOutputStream.writeObject(map);
-            return byteArrayOutputStream.toByteArray();
-        }
-    }
-
     public boolean contains(String file){
         return this.catalogo_chunks.containsKey(file);
     }

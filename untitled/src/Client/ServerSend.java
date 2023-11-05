@@ -1,6 +1,7 @@
 package Client;
 
 import cmd.Chunk;
+import cmd.FileManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,45 +13,50 @@ import java.util.Scanner;
 
 public class ServerSend implements Runnable{
     private Socket socket;
+    private String file_path;
 
-    public ServerSend(Socket socket) {
+    public ServerSend(Socket socket, String path) {
         this.socket = socket;
+        this.file_path = path;
     }
 
     /**
      * Método responsável por interagir com o utilizador e responder consoante isso.
      */
     public void run() {
-        Scanner scan = new Scanner(System.in);
-        try {
+        try (Scanner scan = new Scanner(System.in)) {
+            // enviar o nome do file e nr de chunks (MENSAGEM 1)
+            byte[] path = file_path.getBytes();
+            int numchunk = FileManager.howManyChunksFileHas(file_path);
+            if (numchunk == 0)
+                return;
+            Chunk haveFile = new Chunk(path, path.length, numchunk, true, (byte) 1);
+            OutputStream out = socket.getOutputStream();
+            out.write(Chunk.toByteArray(haveFile));
+            out.flush();
 
-            while(true){
+            while (true) {
                 String input = scan.nextLine();
                 List<Chunk> message = inputMessageManager(input);
-                if(message == null){
+                if (message == null) {
                     System.out.println("O comando introduzido é inválido!");
-                }
-
-                else{
+                } else {
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    for(Chunk c : message){
+                    for (Chunk c : message) {
                         byte[] data = Chunk.toByteArray(c);
                         byteArrayOutputStream.write(data, 0, data.length);
                     }
 
                     // envia os bytes todos, depois o tcp parte
                     byte[] serializedData = byteArrayOutputStream.toByteArray();
-                    OutputStream out = socket.getOutputStream();
                     out.write(serializedData);
                     out.flush();
-                    if(message.size() == 1 && message.get(0).getMsg() == (byte) 4)
+                    if (message.size() == 1 && message.get(0).getMsg() == (byte) 4)
                         break;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            scan.close();
         }
     }
 
@@ -64,10 +70,10 @@ public class ServerSend implements Runnable{
         if(input.contains("GET ")){
             String file = input.replace("GET ", "");
             byte[] data = file.getBytes();
-            ret = Chunk.fromByteArray(data, (byte) 2);
+            ret = Chunk.fromByteArray(data, (byte) 3);
         }
         else if(input.toLowerCase().contains("exit")){
-            Chunk tmp = new Chunk((byte) 4);
+            Chunk tmp = new Chunk((byte) 8);
             ret = new ArrayList<>();
             ret.add(tmp);
         }

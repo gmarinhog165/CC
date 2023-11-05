@@ -1,10 +1,7 @@
 package cmd;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 
 public class FileManager {
 
@@ -51,7 +48,7 @@ public class FileManager {
      * @return
      */
     public static int numChunks(int length){
-        return (int) Math.ceil((double) length / 1000);
+        return (int) Math.ceil((double) length / 990);
     }
 
     /**
@@ -60,7 +57,7 @@ public class FileManager {
      * @return
      */
     public static int findOffsetStartFromIndex(int index){
-        return (int) index * 1000;
+        return (int) index * 990;
     }
 
     /**
@@ -86,6 +83,21 @@ public class FileManager {
     public static String getExtension(String filename){
         int lastDotIndex = filename.lastIndexOf(".");
         return (filename.substring(lastDotIndex));
+    }
+
+    /**
+     * Método que retorna o nº de bytes dum file (Ceil@2gb) -> mudar para long se usarmos files maiores
+     * @param filePath
+     * @return
+     */
+    public static int howManyChunksFileHas(String filePath){
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            return (int) file.length();
+        } else {
+            return 0;
+        }
     }
 
 
