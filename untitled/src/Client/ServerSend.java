@@ -30,7 +30,7 @@ public class ServerSend implements Runnable{
             int numchunk = FileManager.howManyChunksFileHas(file_path);
             if (numchunk == 0)
                 return;
-            Chunk haveFile = new Chunk(path, path.length, numchunk, true, (byte) 1);
+            Chunk haveFile = new Chunk(path, path.length, 0, true, (byte) 1, numchunk);
             OutputStream out = socket.getOutputStream();
             out.write(Chunk.toByteArray(haveFile));
             out.flush();
@@ -51,7 +51,7 @@ public class ServerSend implements Runnable{
                     byte[] serializedData = byteArrayOutputStream.toByteArray();
                     out.write(serializedData);
                     out.flush();
-                    if (message.size() == 1 && message.get(0).getMsg() == (byte) 4)
+                    if (message.size() == 1 && message.get(0).getMsg() == (byte) 8)
                         break;
                 }
             }

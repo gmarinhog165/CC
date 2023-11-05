@@ -36,6 +36,8 @@ public class Chunk {
      */
     private byte msg; // 1 byte
 
+    private int num;
+
     /**
      * Mensagem 2,3,4. -> 1490 bytes dedicados ao payload
      * @param data
@@ -44,12 +46,22 @@ public class Chunk {
      * @param last
      * @param msg
      */
+    public Chunk(byte[] data, int len, int offset, boolean last, byte msg, int num){
+        this.data = Arrays.copyOf(data, len);
+        this.length = len;
+        this.offset = offset;
+        this.last = last;
+        this.msg = msg;
+        this.num = num;
+    }
+
     public Chunk(byte[] data, int len, int offset, boolean last, byte msg){
         this.data = Arrays.copyOf(data, len);
         this.length = len;
         this.offset = offset;
         this.last = last;
         this.msg = msg;
+        this.num = 0;
     }
 
     /**
@@ -63,6 +75,7 @@ public class Chunk {
         this.length = 0;
         this.offset = 0;
         this.last = false;
+        this.num = 0;
     }
 
     public byte[] getData() {
@@ -85,6 +98,9 @@ public class Chunk {
         return msg;
     }
 
+    public int getNum() {
+        return num;
+    }
 
     /**
      * Cria um byte[] a partir de um Chunk
@@ -93,7 +109,7 @@ public class Chunk {
      */
     public static byte[] toByteArray(Chunk chunk) {
         int len = chunk.getLength();
-        byte[] result = new byte[10 + len]; // 12 bytes for fields, plus payload length
+        byte[] result = new byte[14 + len]; // 14 bytes for fields, plus payload length
 
         ByteBuffer buffer = ByteBuffer.wrap(result);
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -113,9 +129,13 @@ public class Chunk {
         // Convert 'msg' (1 byte)
         buffer.put(msg);
 
+        int num = chunk.getNum();
+        // Convert 'num' (4 bytes)
+        buffer.putInt(num);
+
         byte[] data = chunk.getData();
         // Copy 'data' into the result
-        System.arraycopy(data, 0, result, 10, len);
+        System.arraycopy(data, 0, result, 14, len);
 
         return result;
     }
@@ -126,7 +146,7 @@ public class Chunk {
      * @return
      */
     public static Chunk readByteArray(byte[] bytes) {
-        if (bytes.length < 10) {
+        if (bytes.length < 14) {
             throw new IllegalArgumentException("Input byte array is too short");
         }
 
@@ -137,7 +157,7 @@ public class Chunk {
         int length = buffer.getInt();
 
         // Validate the data size
-        if (bytes.length < 10 + length) {
+        if (bytes.length < 14 + length) {
             throw new IllegalArgumentException("Incomplete data in the byte array");
         }
 
@@ -150,10 +170,12 @@ public class Chunk {
         // Extract 'msg' (1 byte)
         byte msg = buffer.get();
 
-        // Extract 'data'
-        byte[] data = Arrays.copyOfRange(bytes, 10, 10 + length);
+        int num = buffer.getInt();
 
-        return new Chunk(data, length, offset, last, msg);
+        // Extract 'data'
+        byte[] data = Arrays.copyOfRange(bytes, 14, 14 + length);
+
+        return new Chunk(data, length, offset, last, msg, num);
     }
 
     public static List<Chunk> fromByteArray(byte[] bytes, byte msg) {
@@ -162,9 +184,9 @@ public class Chunk {
         int remainingLength = bytes.length;
 
         while (remainingLength > 0) {
-            int chunkSize = Math.min(990, remainingLength);
+            int chunkSize = Math.min(986, remainingLength);
             byte[] chunkData = Arrays.copyOfRange(bytes, offset, offset + chunkSize);
-            boolean isLast = remainingLength <= 990;
+            boolean isLast = remainingLength <= 986;
 
             Chunk chunk = new Chunk(chunkData, chunkSize, offset, isLast, msg);
             chunks.add(chunk);
@@ -174,6 +196,24 @@ public class Chunk {
         }
 
         return chunks;
+    }
+
+    /**
+     * Método que diz quantos chunks um file precisa.
+     * @param length -> length de um byte[]
+     * @return
+     */
+    public static int numChunks(int length){
+        return (int) Math.ceil((double) length / 986);
+    }
+
+    /**
+     * Método que devolve o offset dum bloco de dados a partir do seu index
+     * @param index
+     * @return
+     */
+    public static int findOffsetStartFromIndex(int index){
+        return (int) index * 986;
     }
 
     public boolean equals(Object o) {
@@ -198,12 +238,15 @@ public class Chunk {
         if (getMsg() != chunk.getMsg()) {
             return false;
         }
+        if (getNum() != chunk.getNum()){
+            return false;
+        }
         return Arrays.equals(getData(), chunk.getData());
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(getLength(), getOffset(), isLast(), getMsg());
+        int result = Objects.hash(getLength(), getOffset(), isLast(), getMsg(), getNum());
         result = 31 * result + Arrays.hashCode(getData());
         return result;
     }

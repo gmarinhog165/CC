@@ -42,23 +42,6 @@ public class FileManager {
         }
     }
 
-    /**
-     * Método que diz quantos chunks um file precisa.
-     * @param length -> length de um byte[]
-     * @return
-     */
-    public static int numChunks(int length){
-        return (int) Math.ceil((double) length / 990);
-    }
-
-    /**
-     * Método que devolve o offset dum bloco de dados a partir do seu index
-     * @param index
-     * @return
-     */
-    public static int findOffsetStartFromIndex(int index){
-        return (int) index * 990;
-    }
 
     /**
      * Método que vai escrever um segmento de byte[] no offset dado de forma a não ter de guardar
