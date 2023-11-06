@@ -1,5 +1,6 @@
 package Client;
 
+import cmd.Ack;
 import cmd.Chunk;
 
 import java.io.*;
@@ -19,10 +20,12 @@ public class ServerReceive implements Runnable{
 
         try{
             InputStream in = socket.getInputStream();
-            byte[] receiveBuffer = new byte[2000];
+            Ack ack = new Ack();
+            byte[] receiveBuffer = new byte[1000];
             int bytesRead;
 
             List<Chunk> chunksDoMap = new ArrayList<>();
+            int i = 1;
             while ((bytesRead = in.read(receiveBuffer)) != -1) {
                 byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
                 Chunk data = Chunk.readByteArray(receivedData);
@@ -30,13 +33,13 @@ public class ServerReceive implements Runnable{
                     System.out.println("O ficheiro que inseriu não está disponível!");
                     continue;
                 }
-
                 chunksDoMap.add(data);
                 // quando chegar o último chunk começar o processo
                 if(data.isLast()){
                     messageManager(chunksDoMap);
                     chunksDoMap.clear();
                 }
+                ack.sendAck();
             }
 
         } catch(IOException e){
@@ -98,10 +101,10 @@ public class ServerReceive implements Runnable{
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private Map<Integer, List<String>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
+    private Map<String, List<Integer>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serializedData);
              ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
-            return (Map<Integer, List<String>>) objectInputStream.readObject();
+            return (Map<String, List<Integer>>) objectInputStream.readObject();
         }
     }
 
@@ -111,12 +114,9 @@ public class ServerReceive implements Runnable{
      * @param chunkMap
      * @return
      */
-    private static Map<String, List<Integer>> algoritmo(Map<Integer, List<String>> chunkMap) {
+    private static Map<String, List<Integer>> algoritmo(Map<String, List<Integer>> chunkMap) {
         // Extract the list of IP addresses from the chunkMap
-        List<String> ipAddresses = chunkMap.values().stream()
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.toList());
+        List<String> ipAddresses = new ArrayList<>(chunkMap.keySet());
 
         // Initialize a map to store the load for each IP
         Map<String, Integer> ipLoad = new HashMap<>();
@@ -133,16 +133,16 @@ public class ServerReceive implements Runnable{
             balancedChunks.put(ipAddress, new ArrayList<>());
         }
 
-        for (Map.Entry<Integer, List<String>> entry : chunkMap.entrySet()) {
-            int chunkNumber = entry.getKey();
-            List<String> ipsWithChunk = entry.getValue();
+        for (Map.Entry<String, List<Integer>> entry : chunkMap.entrySet()) {
+            String ipAddress = entry.getKey();
+            List<Integer> chunks = entry.getValue();
 
             // Find the IP with the lowest load
             String minLoadIp = ipAddresses.get(0);
 
-            // Assign the chunk to the IP with the lowest load
-            balancedChunks.get(minLoadIp).add(chunkNumber);
-            ipLoad.put(minLoadIp, ipLoad.get(minLoadIp) + 1);
+            // Assign the chunks to the IP with the lowest load
+            balancedChunks.get(minLoadIp).addAll(chunks);
+            ipLoad.put(minLoadIp, ipLoad.get(minLoadIp) + chunks.size());
 
             // Update the sorted IP addresses list
             ipAddresses.sort(Comparator.comparing(ipLoad::get));

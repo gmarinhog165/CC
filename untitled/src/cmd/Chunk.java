@@ -1,6 +1,7 @@
 package cmd;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -249,6 +250,22 @@ public class Chunk {
         int result = Objects.hash(getLength(), getOffset(), isLast(), getMsg(), getNum());
         result = 31 * result + Arrays.hashCode(getData());
         return result;
+    }
+
+    public static byte[] convertChunksToByteArray(List<Chunk> chunkList) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        for (Chunk chunk : chunkList) {
+            byte[] chunkData = Chunk.toByteArray(chunk);
+            try {
+                byteArrayOutputStream.write(chunkData);
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle the exception as needed
+            }
+        }
+
+        return byteArrayOutputStream.toByteArray();
     }
 
 }

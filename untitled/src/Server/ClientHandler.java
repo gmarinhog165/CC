@@ -1,5 +1,6 @@
 package Server;
 
+import cmd.Ack;
 import cmd.Chunk;
 
 import java.io.*;
@@ -20,6 +21,7 @@ public class ClientHandler implements Runnable{
         try {
             InputStream in = clientSocket.getInputStream();
             OutputStream out = clientSocket.getOutputStream();
+            Ack ack = new Ack();
 
             // forma de ler dados do cliente
             byte[] buffer = new byte[1000]; // chega um chunk de cada vez por isso podia ser mais, mas cada so tem 1000bytes
@@ -45,6 +47,7 @@ public class ClientHandler implements Runnable{
                         for(Chunk c : chunks){
                             out.write(Chunk.toByteArray(c));
                             out.flush();
+                            ack.waitForAck();
                         }
                     }
                     else{
@@ -59,6 +62,8 @@ public class ClientHandler implements Runnable{
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -68,11 +73,18 @@ public class ClientHandler implements Runnable{
      * @return
      * @throws IOException
      */
-    private byte[] serializeMap(Map<Integer, List<String>> map) throws IOException {
+    private byte[] serializeMap(Map<String, List<Integer>> map) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(map);
             return byteArrayOutputStream.toByteArray();
+        }
+    }
+
+    private Map<String, List<Integer>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serializedData);
+             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
+            return (Map<String, List<Integer>>) objectInputStream.readObject();
         }
     }
 

@@ -16,14 +16,8 @@ public class FS_Track_Protocol {
     }
 
 
-
-
     public void connection (String port) {
         try {
-            // teste
-            this.server.addChunkAssignment();
-            //
-
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(port));
             System.out.println("Server is listening on port " + port);
 
