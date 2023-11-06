@@ -1,12 +1,10 @@
 package Client;
 
-import cmd.Ack;
 import cmd.Chunk;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ServerReceive implements Runnable{
     private Socket socket;
@@ -20,7 +18,7 @@ public class ServerReceive implements Runnable{
 
         try{
             InputStream in = socket.getInputStream();
-            Ack ack = new Ack();
+            OutputStream out = socket.getOutputStream();
             byte[] receiveBuffer = new byte[1000];
             int bytesRead;
 
@@ -39,7 +37,7 @@ public class ServerReceive implements Runnable{
                     messageManager(chunksDoMap);
                     chunksDoMap.clear();
                 }
-                ack.sendAck();
+                out.write(Chunk.toByteArray(new Chunk((byte) 9)));
             }
 
         } catch(IOException e){

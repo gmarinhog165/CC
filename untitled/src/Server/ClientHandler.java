@@ -1,6 +1,5 @@
 package Server;
 
-import cmd.Ack;
 import cmd.Chunk;
 
 import java.io.*;
@@ -21,7 +20,6 @@ public class ClientHandler implements Runnable{
         try {
             InputStream in = clientSocket.getInputStream();
             OutputStream out = clientSocket.getOutputStream();
-            Ack ack = new Ack();
 
             // forma de ler dados do cliente
             byte[] buffer = new byte[1000]; // chega um chunk de cada vez por isso podia ser mais, mas cada so tem 1000bytes
@@ -47,7 +45,7 @@ public class ClientHandler implements Runnable{
                         for(Chunk c : chunks){
                             out.write(Chunk.toByteArray(c));
                             out.flush();
-                            ack.waitForAck();
+                            bytesRead = in.read(buffer);
                         }
                     }
                     else{
@@ -62,8 +60,6 @@ public class ClientHandler implements Runnable{
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
