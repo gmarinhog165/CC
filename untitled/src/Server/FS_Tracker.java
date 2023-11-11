@@ -18,7 +18,7 @@ public class FS_Tracker {
      * * Cuja Key é o nº do chunk
      * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
-    private Map<String, Map<String, List<Integer>>> catalogo_chunks = new HashMap<>();
+    private Map<String, Map<Integer, List<String>>> catalogo_chunks = new HashMap<>();
 
     // -> Map<Integer, SHA-1>
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
@@ -29,7 +29,7 @@ public class FS_Tracker {
         this.catalogo_chunks = new HashMap<>();
     }
 
-    public Map<String, List<Integer>> getInfoFile(String file){
+    public Map<Integer, List<String>> getInfoFile(String file){
         return this.catalogo_chunks.get(file);
     }
 
@@ -43,36 +43,35 @@ public class FS_Tracker {
      */
     public void writeFileOnHashMsg1(Chunk chunk, String ip){
         String name = new String(chunk.getData());
-        int nchunks = chunk.getNum();
+        int nchunks = chunk.getOffset();
         try{
             this.writel.lock();
             // caso o file seja repetido
             if(this.catalogo_chunks.containsKey(name)){
-                Map<String, List<Integer>> tmp = this.catalogo_chunks.get(name);
+                Map<Integer, List<String>> tmp = this.catalogo_chunks.get(name);
                 for(int i = 1; i <= nchunks; i++){
                     // caso já haja algum Node com este chunk
-                    if(tmp.containsKey(ip)){
-                        List<Integer> tmp2 = tmp.get(ip);
-                        tmp2.add(i);
+                    if(tmp.containsKey(i)){
+                        List<String> tmp2 = tmp.get(i);
+                        tmp2.add(ip);
                     }
                     // caso nao haja nenhum node com este chunk
                     else {
-                        List<Integer> tmp2 = new ArrayList<>();
-                        tmp2.add(i);
-                        tmp.put(ip, tmp2);
+                        List<String> tmp2 = new ArrayList<>();
+                        tmp2.add(ip);
+                        tmp.put(i, tmp2);
                     }
                 }
             }
             // caso o file seja novo
             else{
-                Map<String, List<Integer>> tmp2 = new HashMap<>();
-                List<Integer> tmp3 = new ArrayList<>();
+                Map<Integer, List<String>> tmp2 = new HashMap<>();
                 for(int i = 1; i <= nchunks; i++){
-                    tmp3.add(i);
+                    List<String> tmp3 = new ArrayList<>();
+                    tmp3.add(ip);
+                    tmp2.put(i,tmp3);
                 }
-                tmp2.put(ip,tmp3);
                 this.catalogo_chunks.put(name, tmp2);
-                System.out.println();
             }
         } finally {
             this.writel.unlock();

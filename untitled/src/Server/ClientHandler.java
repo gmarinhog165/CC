@@ -45,7 +45,7 @@ public class ClientHandler implements Runnable{
                         for(Chunk c : chunks){
                             out.write(Chunk.toByteArray(c));
                             out.flush();
-                            bytesRead = in.read(buffer);
+                            int bitsread = in.read(buffer); // ACK para nao perder cenas
                         }
                     }
                     else{
@@ -69,18 +69,11 @@ public class ClientHandler implements Runnable{
      * @return
      * @throws IOException
      */
-    private byte[] serializeMap(Map<String, List<Integer>> map) throws IOException {
+    private byte[] serializeMap(Map<Integer, List<String>> map) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(map);
             return byteArrayOutputStream.toByteArray();
-        }
-    }
-
-    private Map<String, List<Integer>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serializedData);
-             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
-            return (Map<String, List<Integer>>) objectInputStream.readObject();
         }
     }
 

@@ -37,6 +37,9 @@ public class Chunk {
      */
     private byte msg; // 1 byte
 
+    /**
+     * Identifica o número de chunks
+     */
     private int num;
 
     /**
@@ -77,6 +80,15 @@ public class Chunk {
         this.offset = 0;
         this.last = false;
         this.num = 0;
+    }
+
+    public Chunk(int num) {
+        this.msg = (byte) 10;
+        this.data = new byte[0];
+        this.length = 0;
+        this.offset = 0;
+        this.last = false;
+        this.num = num;
     }
 
     public byte[] getData() {
@@ -261,7 +273,6 @@ public class Chunk {
                 byteArrayOutputStream.write(chunkData);
             } catch (IOException e) {
                 e.printStackTrace();
-                // Handle the exception as needed
             }
         }
 
