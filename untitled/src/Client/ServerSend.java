@@ -35,25 +35,26 @@ public class ServerSend implements Runnable{
             out.flush();
 
             while (true) {
-                String input = scan.nextLine();
-                List<Chunk> message = inputMessageManager(input);
-                if (message == null) {
-                    System.out.println("O comando introduzido é inválido!");
-                } else {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    for (Chunk c : message) {
-                        byte[] data = Chunk.toByteArray(c);
-                        byteArrayOutputStream.write(data, 0, data.length);
+                while(true){
+                    String input = scan.nextLine();
+                    List<Chunk> message = inputMessageManager(input);
+                    if (message == null) {
+                        System.out.println("O comando introduzido é inválido!");
+                    } else {
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        for (Chunk c : message) {
+                            byte[] data = Chunk.toByteArray(c);
+                            byteArrayOutputStream.write(data, 0, data.length);
+                        }
+
+                        // envia os bytes todos, depois o tcp parte
+                        byte[] serializedData = byteArrayOutputStream.toByteArray();
+                        out.write(serializedData);
+                        out.flush();
+                        if (message.size() == 1 && message.get(0).getMsg() == (byte) 8)
+                            break;
                     }
-
-                    // envia os bytes todos, depois o tcp parte
-                    byte[] serializedData = byteArrayOutputStream.toByteArray();
-                    out.write(serializedData);
-                    out.flush();
-                    if (message.size() == 1 && message.get(0).getMsg() == (byte) 8)
-                        break;
                 }
-
 
                 byte[] receiveBuffer = new byte[1000];
                 int bytesRead;
