@@ -115,6 +115,11 @@ public class FS_Tracker {
             for (List<String> ipList : chunkIP.values()) {
                 ipList.removeIf(k -> k.equals(ip));
             }
+            chunkIP.values().removeIf(List::isEmpty);
+
+            if (chunkIP.isEmpty()) {
+                this.catalogo_chunks.remove(c);
+            }
         }
         this.nodes_files.remove(ip);
     }
