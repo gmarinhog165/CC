@@ -25,7 +25,7 @@ public class ServerUserHandler implements Runnable{
             OutputStream out = socket.getOutputStream();
             // enviar o nome do file e nr de chunks (MENSAGEM 1)
             byte[] path = file_path.getBytes();
-            int numchunk = FileManager.howManyChunksFileHas(file_path);
+            int numchunk = FileManager.howManyBytesFileHas(file_path);
             if (numchunk == 0){
                 System.out.println("Conexão não autorizada! O ficheiro não existe!");
                 return;

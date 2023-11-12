@@ -45,25 +45,30 @@ public class TaskManager implements Runnable{
                 outputStream.write(c.getData());
             }
             // dar deserialize do byte[]
-            Map<String, List<Integer>> locs = algoritmo(deserializeMap(outputStream.toByteArray()));
+            Map<Integer, List<String>> catalogo = deserializeMap(outputStream.toByteArray());
+            // length do ultimo chunk
+            int lenlastchunk = Integer.parseInt(catalogo.remove(-1).get(0));
+            // número do último chunk
+            int lastchunk = catalogo.keySet().stream()
+                    .max(Integer::compare)
+                    .orElse(null);
 
-            // verificar len para criar um array com todas as threads necessárias para as
-            // poder inicializar simultaneamente
-            int len = locs.values()
-                    .stream()
-                    .mapToInt(List::size)
-                    .sum();
+            Map<String, List<Integer>> locs = algoritmo(catalogo);
 
-            System.out.println(len);
-            Thread[] threads = new Thread[len];
-            int i = 0;
             ExecutorService executor = Executors.newFixedThreadPool(5);
             for(Map.Entry<String, List<Integer>> d : locs.entrySet()){
                 String ip = d.getKey();
                 List<Integer> chunks = d.getValue();
                 for(int b : chunks){
-                    Runnable worker = new NodeSend(ip, b);
+                    Runnable worker;
+                    if(b == lastchunk){
+                        worker = new NodeSend(socket, ip, b, lenlastchunk);
+                        System.out.println(lenlastchunk);
+                    } else {
+                        worker = new NodeSend(socket, ip, b, 986);
+                    }
                     executor.execute(worker);
+
                 }
                 executor.shutdown();
                 while (!executor.isTerminated());

@@ -9,6 +9,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Done : !!.
+ * 0 -> Tenho Chunk x do File X
+ * !!1 -> Tenho File x
+ * 2 -> Lista de SHA-1 de cada Chunk
+ * !!3 -> Quero File x
+ * 4 -> Quero este Chunk do File X
+ * !!5 -> Toma a localização do File X
+ * 6 -> Toma lista de SHA-1
+ * !!7 -> Não existe este File
+ * !!8 -> Exit
+ * !!9 -> ACK
+ * 10 -> Toma localização do Chunk X
+ */
+
 public class Chunk {
 
     /**

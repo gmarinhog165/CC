@@ -48,7 +48,8 @@ public class FS_Tracker {
      */
     public void writeFileOnHashMsg1(Chunk chunk, String ip){
         String name = new String(chunk.getData());
-        int nchunks = chunk.getNum();
+        int chunks = chunk.getNum();
+        int nchunks = calculateNumChunks(chunks);
         try{
             this.writel.lock();
             // caso o file seja repetido
@@ -76,6 +77,9 @@ public class FS_Tracker {
                     tmp3.add(ip);
                     tmp2.put(i,tmp3);
                 }
+                List<String> t = new ArrayList<>();
+                t.add(String.valueOf(chunks%nchunks));
+                tmp2.put(-1, t);
                 this.catalogo_chunks.put(name, tmp2);
             }
 
@@ -122,6 +126,10 @@ public class FS_Tracker {
             }
         }
         this.nodes_files.remove(ip);
+    }
+
+    public static int calculateNumChunks(int totalBytes) {
+        return (int) Math.ceil((double) totalBytes / 986);
     }
 
 }

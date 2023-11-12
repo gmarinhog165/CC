@@ -73,7 +73,7 @@ public class FileManager {
      * @param filePath
      * @return
      */
-    public static int howManyChunksFileHas(String filePath){
+    public static int howManyBytesFileHas(String filePath){
         File file = new File(filePath);
 
         if (file.exists()) {

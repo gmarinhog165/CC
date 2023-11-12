@@ -16,9 +16,8 @@ public class FS_Node {
             Socket socket = new Socket(ip, serverPort);
             System.out.println("Connected to the server at " + ip + ":" + serverPort);
 
-            // send data
-
             Thread sendDataToTracker = new Thread(new ServerUserHandler(socket, this.file_path));
+            // Thread de servidor UDP
             sendDataToTracker.start();
             sendDataToTracker.join();
 
