@@ -24,9 +24,9 @@ public class FS_Node {
             // send data
 
             Thread sendDataToTracker = new Thread(new ServerSend(socket, this.file_path));
-            Thread receiveDataFromTracker = new Thread(new ServerReceive(socket));
+            //Thread receiveDataFromTracker = new Thread(new ServerReceive(socket));
             sendDataToTracker.start();
-            receiveDataFromTracker.start();
+            //receiveDataFromTracker.start();
             sendDataToTracker.join();
 
             socket.close();

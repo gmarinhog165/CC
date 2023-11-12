@@ -9,40 +9,18 @@ import java.util.stream.Collectors;
 
 public class ServerReceive implements Runnable{
     private Socket socket;
+    private List<Chunk> chunksDoMap;
 
-    public ServerReceive(Socket socket){
+    public ServerReceive(Socket socket, List<Chunk> um){
         this.socket = socket;
+        this.chunksDoMap = um;
     }
 
     @Override
     public void run() {
-
-        try{
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
-            byte[] receiveBuffer = new byte[1000];
-            int bytesRead;
-
-            List<Chunk> chunksDoMap = new ArrayList<>();
-            while ((bytesRead = in.read(receiveBuffer)) != -1) {
-                byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
-                Chunk data = Chunk.readByteArray(receivedData);
-                if(data.getMsg() == (byte) 7){
-                    System.out.println("O ficheiro que inseriu não está disponível!");
-                    continue;
-                }
-                chunksDoMap.add(data);
-                // quando chegar o último chunk começar o processo
-                if(data.isLast()){
-                    messageManager(chunksDoMap);
-                    chunksDoMap.clear();
-                }
-                out.write(Chunk.toByteArray(new Chunk((byte) 9)));
-            }
-
-        } catch(IOException e){
-            e.printStackTrace();
-        } catch (ClassNotFoundException | InterruptedException e) {
+        try {
+            messageManager(this.chunksDoMap);
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -152,4 +130,5 @@ public class ServerReceive implements Runnable{
 
         return balancedChunks;
     }
+
 }
