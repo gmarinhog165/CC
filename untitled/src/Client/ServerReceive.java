@@ -73,6 +73,7 @@ public class ServerReceive implements Runnable{
                     .stream()
                     .mapToInt(List::size)
                     .sum();
+
             System.out.println(len);
             Thread[] threads = new Thread[len];
             int i = 0;

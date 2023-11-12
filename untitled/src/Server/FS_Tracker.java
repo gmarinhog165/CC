@@ -18,7 +18,11 @@ public class FS_Tracker {
      * * Cuja Key é o nº do chunk
      * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
-    private Map<String, Map<Integer, List<String>>> catalogo_chunks = new HashMap<>();
+    private Map<String, Map<Integer, List<String>>> catalogo_chunks;
+    /**
+     * hash que indica que files tem cada node
+     */
+    private Map<String, Set<String>> nodes_files;
 
     // -> Map<Integer, SHA-1>
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
@@ -27,6 +31,7 @@ public class FS_Tracker {
 
     public FS_Tracker(){
         this.catalogo_chunks = new HashMap<>();
+        this.nodes_files = new HashMap<>();
     }
 
     public Map<Integer, List<String>> getInfoFile(String file){
@@ -43,7 +48,7 @@ public class FS_Tracker {
      */
     public void writeFileOnHashMsg1(Chunk chunk, String ip){
         String name = new String(chunk.getData());
-        int nchunks = chunk.getOffset();
+        int nchunks = chunk.getNum();
         try{
             this.writel.lock();
             // caso o file seja repetido
@@ -73,6 +78,18 @@ public class FS_Tracker {
                 }
                 this.catalogo_chunks.put(name, tmp2);
             }
+
+
+            if(this.nodes_files.containsKey(ip)){
+                Set<String> tt = this.nodes_files.get(ip);
+                tt.add(name);
+            }
+            else{
+                Set<String> tt2 = new HashSet<>();
+                tt2.add(name);
+                this.nodes_files.put(ip, tt2);
+            }
+
         } finally {
             this.writel.unlock();
         }
@@ -85,6 +102,21 @@ public class FS_Tracker {
      */
     public boolean contains(String file){
         return this.catalogo_chunks.containsKey(file);
+    }
+
+    /**
+     * Método que apaga toda a informação de um node quando este desconecta
+     * @param ip
+     */
+    public void deleteNode(String ip){
+        Set<String> tmp = this.nodes_files.get(ip);
+        for(String c : tmp){
+            Map<Integer, List<String>> chunkIP = this.catalogo_chunks.get(c);
+            for (List<String> ipList : chunkIP.values()) {
+                ipList.removeIf(k -> k.equals(ip));
+            }
+        }
+        this.nodes_files.remove(ip);
     }
 
 }

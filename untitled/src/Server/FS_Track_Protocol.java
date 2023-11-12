@@ -34,8 +34,4 @@ public class FS_Track_Protocol {
             e.printStackTrace();
         }
     }
-
-    private void messageManager(byte msg){
-        //TO DO
-    }
 }
