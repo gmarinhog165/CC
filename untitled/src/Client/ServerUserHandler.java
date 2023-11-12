@@ -6,13 +6,12 @@ import cmd.FileManager;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class ServerSend implements Runnable{
+public class ServerUserHandler implements Runnable{
     private Socket socket;
     private String file_path;
 
-    public ServerSend(Socket socket, String path) {
+    public ServerUserHandler(Socket socket, String path) {
         this.socket = socket;
         this.file_path = path;
     }
@@ -22,20 +21,24 @@ public class ServerSend implements Runnable{
      */
     public void run() {
         try (Scanner scan = new Scanner(System.in)) {
+            InputStream in = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
             // enviar o nome do file e nr de chunks (MENSAGEM 1)
             byte[] path = file_path.getBytes();
             int numchunk = FileManager.howManyChunksFileHas(file_path);
-            if (numchunk == 0)
+            if (numchunk == 0){
+                System.out.println("Conexão não autorizada! O ficheiro não existe!");
                 return;
-            Chunk haveFile = new Chunk(path, path.length, 0, true, (byte) 1, numchunk);
+            }
 
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
+            Chunk haveFile = new Chunk(path, path.length, 0, true, (byte) 1, numchunk);
             out.write(Chunk.toByteArray(haveFile));
             out.flush();
 
-            while (true) {
-                while(true){
+            boolean loop = true;
+            while (loop) {
+                // loop para o utilizador colocar comandos corretos, quando coloca dá break
+                while (true) {
                     String input = scan.nextLine();
                     List<Chunk> message = inputMessageManager(input);
                     if (message == null) {
@@ -51,8 +54,7 @@ public class ServerSend implements Runnable{
                         byte[] serializedData = byteArrayOutputStream.toByteArray();
                         out.write(serializedData);
                         out.flush();
-                        if (message.size() == 1 && message.get(0).getMsg() == (byte) 8)
-                            break;
+                        break;
                     }
                 }
 
@@ -65,18 +67,22 @@ public class ServerSend implements Runnable{
                     Chunk data = Chunk.readByteArray(receivedData);
                     if(data.getMsg() == (byte) 7){
                         System.out.println("O ficheiro que inseriu não está disponível!");
-                        continue;
-                    }
-                    chunksDoMap.add(data);
-                    // quando chegar o último chunk começar o processo
-                    if(data.isLast()){
-                        Thread toexec = new Thread(new ServerReceive(socket, chunksDoMap));
                         break;
                     }
+                    else if(data.getMsg() == (byte) 8){
+                        loop = false;
+                        break;
+                    }
+                    chunksDoMap.add(data);
                     out.write(Chunk.toByteArray(new Chunk((byte) 9)));
+
+                    // quando chegar o último chunk começar o processo
+                    if(data.isLast()){
+                        Thread toexec = new Thread(new TaskManager(socket, chunksDoMap));
+                        toexec.start();
+                        break;
+                    }
                 }
-
-
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -13,6 +13,6 @@ public class NodeSend implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("Vou buscar o Chunk [" + chunk + "] ao IP: " + ip);
+        System.out.println("Thread " + Thread.currentThread().getId() + " is executing. IP: " + ip + ", Chunk: " + chunk);
     }
 }

@@ -37,6 +37,9 @@ public class ClientHandler implements Runnable{
                     this.server.writeFileOnHashMsg1(data, clientSocket.getInetAddress().getHostAddress());
                 }
                 else if(msg == (byte) 8){
+                    Chunk tmp = new Chunk((byte) 8);
+                    out.write(Chunk.toByteArray(tmp));
+                    out.flush();
                     this.server.deleteNode(clientSocket.getInetAddress().getHostAddress());
                     break;
                 }

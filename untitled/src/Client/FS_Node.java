@@ -1,12 +1,7 @@
 package Client;
 
-import cmd.Chunk;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class FS_Node {
     private String file_path;
@@ -23,10 +18,8 @@ public class FS_Node {
 
             // send data
 
-            Thread sendDataToTracker = new Thread(new ServerSend(socket, this.file_path));
-            //Thread receiveDataFromTracker = new Thread(new ServerReceive(socket));
+            Thread sendDataToTracker = new Thread(new ServerUserHandler(socket, this.file_path));
             sendDataToTracker.start();
-            //receiveDataFromTracker.start();
             sendDataToTracker.join();
 
             socket.close();

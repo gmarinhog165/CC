@@ -5,13 +5,15 @@ import cmd.Chunk;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class ServerReceive implements Runnable{
+public class TaskManager implements Runnable{
     private Socket socket;
     private List<Chunk> chunksDoMap;
 
-    public ServerReceive(Socket socket, List<Chunk> um){
+    public TaskManager(Socket socket, List<Chunk> um){
         this.socket = socket;
         this.chunksDoMap = um;
     }
@@ -55,18 +57,17 @@ public class ServerReceive implements Runnable{
             System.out.println(len);
             Thread[] threads = new Thread[len];
             int i = 0;
+            ExecutorService executor = Executors.newFixedThreadPool(5);
             for(Map.Entry<String, List<Integer>> d : locs.entrySet()){
                 String ip = d.getKey();
                 List<Integer> chunks = d.getValue();
                 for(int b : chunks){
-                    threads[i] = new Thread(new NodeSend(ip, b));
-                    threads[i++].start();// pesquisar ticket
+                    Runnable worker = new NodeSend(ip, b);
+                    executor.execute(worker);
                 }
-
-            }
-
-            for(int j = 0; j < len; j++){
-                threads[j].join();
+                executor.shutdown();
+                while (!executor.isTerminated());
+                System.out.println("Finished all threads");
             }
         }
     }
