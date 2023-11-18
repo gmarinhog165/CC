@@ -78,7 +78,7 @@ public class FS_Tracker {
                     tmp2.put(i,tmp3);
                 }
                 List<String> t = new ArrayList<>();
-                t.add(String.valueOf(chunks%nchunks));
+                t.add(String.valueOf(chunks%986));
                 tmp2.put(-1, t);
                 this.catalogo_chunks.put(name, tmp2);
             }

@@ -241,7 +241,7 @@ public class Chunk {
      * @return
      */
     public static int findOffsetStartFromIndex(int index){
-        return (int) index * 986;
+        return (int) (index-1) * 986;
     }
 
     public boolean equals(Object o) {

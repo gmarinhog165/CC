@@ -5,11 +5,13 @@ import cmd.FileManager;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ServerUserHandler implements Runnable{
     private Socket socket;
     private String file_path;
+    private List<String> file_Wanted = new ArrayList<>();
 
     public ServerUserHandler(Socket socket, String path) {
         this.socket = socket;
@@ -78,8 +80,9 @@ public class ServerUserHandler implements Runnable{
 
                     // quando chegar o último chunk começar o processo
                     if(data.isLast()){
-                        Thread toexec = new Thread(new TaskManager(socket, chunksDoMap));
+                        Thread toexec = new Thread(new TaskManager(socket, chunksDoMap, this.file_Wanted.get(0)));
                         toexec.start();
+                        this.file_Wanted.remove(0);
                         break;
                     }
                 }
@@ -97,8 +100,9 @@ public class ServerUserHandler implements Runnable{
     private List<Chunk> inputMessageManager(String input){
         List<Chunk> ret = null;
         if(input.contains("GET ")){
-            String file = input.replace("GET ", "");
-            byte[] data = file.getBytes();
+            String file = FileManager.extractFilePath(input);
+            this.file_Wanted.add(file);
+            byte[] data = file.getBytes(StandardCharsets.UTF_8);
             ret = Chunk.fromByteArray(data, (byte) 3);
         }
         else if(input.toLowerCase().contains("exit")){

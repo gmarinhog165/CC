@@ -2,6 +2,11 @@ package cmd;
 
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FileManager {
 
@@ -37,7 +42,7 @@ public class FileManager {
         try (RandomAccessFile file = new RandomAccessFile(filePath, "r")) {
             file.seek(offset);
             byte[] data = new byte[length];
-            file.readFully(data);
+            file.read(data, 0, length);
             return data;
         }
     }
@@ -81,6 +86,35 @@ public class FileManager {
         } else {
             return 0;
         }
+    }
+
+    public static void createEmptyFile(String path) throws IOException {
+        Files.createFile(Paths.get(path));
+    }
+
+    /**
+     * método que remove o path e fica só o nome do file
+     * @param path
+     * @return
+     */
+    public static String getFileName(String path){
+        Path path1 = Paths.get(path);
+        return path1.getFileName().toString();
+    }
+
+    public static String extractFilePath(String input) {
+        // Define a pattern to match "GET " followed by a file path
+        Pattern pattern = Pattern.compile("^GET\\s+(.+)$");
+        Matcher matcher = pattern.matcher(input);
+
+        // Check if the pattern matches the input
+        if (matcher.matches()) {
+            // Group 1 contains the file path
+            return matcher.group(1);
+        }
+
+        // Return null for invalid input format
+        return null;
     }
 
 

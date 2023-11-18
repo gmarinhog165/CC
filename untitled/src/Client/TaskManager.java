@@ -1,6 +1,7 @@
 package Client;
 
 import cmd.Chunk;
+import cmd.FileManager;
 
 import java.io.*;
 import java.net.Socket;
@@ -12,15 +13,18 @@ import java.util.stream.Collectors;
 public class TaskManager implements Runnable{
     private Socket socket;
     private List<Chunk> chunksDoMap;
+    private String file;
 
-    public TaskManager(Socket socket, List<Chunk> um){
+    public TaskManager(Socket socket, List<Chunk> um, String file){
         this.socket = socket;
         this.chunksDoMap = um;
+        this.file = file;
     }
 
     @Override
     public void run() {
         try {
+            FileManager.createEmptyFile(FileManager.getFileName(this.file));
             messageManager(this.chunksDoMap);
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -62,10 +66,9 @@ public class TaskManager implements Runnable{
                 for(int b : chunks){
                     Runnable worker;
                     if(b == lastchunk){
-                        worker = new NodeSend(socket, ip, b, lenlastchunk);
-                        System.out.println(lenlastchunk);
+                        worker = new NodeSend(socket, ip, b, lenlastchunk, this.file);
                     } else {
-                        worker = new NodeSend(socket, ip, b, 986);
+                        worker = new NodeSend(socket, ip, b, 986, this.file);
                     }
                     executor.execute(worker);
 
