@@ -14,18 +14,17 @@ public class ProcessBNodes implements Runnable{
     private InetAddress ip;
     private int port;
 
-    private byte[] bnode;
+    private BNodes tmp;
 
-    public ProcessBNodes(InetAddress ip, int port, byte[] bnode) {
+    public ProcessBNodes(InetAddress ip, int port, BNodes bnode) {
         this.ip = ip;
         this.port = port;
-        this.bnode = bnode;
+        this.tmp = bnode;
     }
 
     @Override
     public void run() {
         try {
-            BNodes tmp = BNodes.readByteArray(this.bnode);
             String path = new String(tmp.getData(), StandardCharsets.UTF_8);
             int nchunk = tmp.getNchunk();
             int offset = Chunk.findOffsetStartFromIndex(nchunk);
@@ -35,6 +34,7 @@ public class ProcessBNodes implements Runnable{
             DatagramSocket clientSocket = new DatagramSocket();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ip, port);
             clientSocket.send(sendPacket);
+            clientSocket.close();
 
         } catch (IOException e) {
             throw new RuntimeException(e);

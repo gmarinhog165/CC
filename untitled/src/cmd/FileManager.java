@@ -5,6 +5,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,6 +117,50 @@ public class FileManager {
 
         // Return null for invalid input format
         return null;
+    }
+
+    public static List<byte[]> intoListByteArray(byte[] input) {
+        int maxSize = 986;
+        if (input == null) {
+            throw new IllegalArgumentException("Invalid input");
+        }
+
+        List<byte[]> result = new ArrayList<>();
+
+        int offset = 0;
+        int length = Math.min(maxSize, input.length);
+
+        while (offset < input.length) {
+            byte[] chunk = new byte[length];
+            System.arraycopy(input, offset, chunk, 0, length);
+            result.add(chunk);
+
+            offset += length;
+            length = Math.min(maxSize, input.length - offset);
+        }
+
+        return result;
+    }
+
+//    public static byte[] readAllFile(String filePath) throws IOException {
+//        Path path = Paths.get(filePath);
+//        return Files.readAllBytes(path);
+//    }
+
+    public static byte[] readAllFile(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             var inputStream = Files.newInputStream(path)) {
+
+            byte[] buffer = new byte[4096]; // Adjust the buffer size as needed
+
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+
+            return baos.toByteArray();
+        }
     }
 
 

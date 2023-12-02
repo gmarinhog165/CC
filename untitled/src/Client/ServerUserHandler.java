@@ -1,21 +1,27 @@
 package Client;
 
 import cmd.Chunk;
+import cmd.ConnectionTCP;
 import cmd.FileManager;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ServerUserHandler implements Runnable{
     private Socket socket;
     private String file_path;
     private List<String> file_Wanted = new ArrayList<>();
+    private ConnectionTCP contcp;
 
-    public ServerUserHandler(Socket socket, String path) {
+    public ServerUserHandler(Socket socket, String path) throws IOException {
         this.socket = socket;
         this.file_path = path;
+        this.contcp = new ConnectionTCP(socket);
     }
 
     /**
@@ -23,50 +29,64 @@ public class ServerUserHandler implements Runnable{
      */
     public void run() {
         try (Scanner scan = new Scanner(System.in)) {
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
             // enviar o nome do file e nr de chunks (MENSAGEM 1)
-            byte[] path = file_path.getBytes();
+            byte[] path = file_path.getBytes(StandardCharsets.UTF_8);
             int numchunk = FileManager.howManyBytesFileHas(file_path);
             if (numchunk == 0){
                 System.out.println("Conexão não autorizada! O ficheiro não existe!");
                 return;
             }
 
-            Chunk haveFile = new Chunk(path, path.length, 0, true, (byte) 1, numchunk);
-            out.write(Chunk.toByteArray(haveFile));
-            out.flush();
+            contcp.send(new Chunk(path, path.length, 0, true, (byte) 1, numchunk));
+
+
+            // Preparação para mandar a lista com SHA-1 de cada chunk
+            List<byte[]> shas = (FileManager.intoListByteArray(FileManager.readAllFile(file_path)));
+            List<byte[]> sha1List = shas.stream().map(bytes -> {
+                try { return MessageDigest.getInstance("SHA-1").digest(bytes); }
+                catch (NoSuchAlgorithmException e) { throw new RuntimeException(e); }
+            }).toList();
+            int len = sha1List.size();
+            int m = 0;
+            List<Chunk> chunkssha1 = new ArrayList<>();
+            for(byte[] c : sha1List){
+                Chunk d;
+                if(m == len-1)
+                    d= new Chunk(c, c.length,0,true,(byte) 2, m+1);
+                else
+                    d= new Chunk(c, c.length,0,false,(byte) 2, m+1);
+                chunkssha1.add(d);
+                m++;
+            }
+            contcp.send(new Chunk(path, path.length, chunkssha1.size(), false, (byte) 2));
+            for(Chunk k : chunkssha1){
+                contcp.send(k);
+                contcp.receive();
+            }
+
 
             boolean loop = true;
             while (loop) {
                 // loop para o utilizador colocar comandos corretos, quando coloca dá break
                 while (true) {
                     String input = scan.nextLine();
-                    List<Chunk> message = inputMessageManager(input);
+                    Chunk message = inputMessageManager(input);
                     if (message == null) {
                         System.out.println("O comando introduzido é inválido!");
-                    } else {
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        for (Chunk c : message) {
-                            byte[] data = Chunk.toByteArray(c);
-                            byteArrayOutputStream.write(data, 0, data.length);
-                        }
-
-                        // envia os bytes todos, depois o tcp parte
-                        byte[] serializedData = byteArrayOutputStream.toByteArray();
-                        out.write(serializedData);
-                        out.flush();
+                    } else if (message.getMsg() == (byte) 8){
+                        contcp.send(message);
+                        System.exit(0);
+                    }
+                    else {
+                        contcp.send(message);
                         break;
                     }
                 }
 
-                byte[] receiveBuffer = new byte[1000];
-                int bytesRead;
-
                 List<Chunk> chunksDoMap = new ArrayList<>();
-                while ((bytesRead = in.read(receiveBuffer)) != -1) {
-                    byte[] receivedData = Arrays.copyOf(receiveBuffer, bytesRead);
-                    Chunk data = Chunk.readByteArray(receivedData);
+                while (true) {
+                    Chunk data = contcp.receive();
+
                     if(data.getMsg() == (byte) 7){
                         System.out.println("O ficheiro que inseriu não está disponível!");
                         break;
@@ -75,16 +95,29 @@ public class ServerUserHandler implements Runnable{
                         loop = false;
                         break;
                     }
-                    chunksDoMap.add(data);
-                    out.write(Chunk.toByteArray(new Chunk((byte) 9)));
+                    else if(data.getMsg() == (byte) 3){
+                        int i = data.getLength();
+                        for(int t = 0; t < i; t++){
+                            chunksDoMap.add(contcp.receive());
+                            contcp.send(new Chunk((byte) 9));
+                        }
 
-                    // quando chegar o último chunk começar o processo
-                    if(data.isLast()){
-                        Thread toexec = new Thread(new TaskManager(socket, chunksDoMap, this.file_Wanted.get(0)));
+                        List<Chunk> toDS = new ArrayList<>();
+                        int len2 = contcp.receive().getLength();
+                        for(int t = 0; t < len2; t++){
+                            toDS.add(contcp.receive());
+                            contcp.send(new Chunk((byte) 9));
+                        }
+
+                        String path1 = this.file_Wanted.get(0);
+                        Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS));
                         toexec.start();
                         this.file_Wanted.remove(0);
+                        System.out.println("ServerUserHandler::run:: FILE NAME: " +path1);
+                        //chunksDoMap.clear();
                         break;
                     }
+
                 }
             }
         } catch (IOException e) {
@@ -97,23 +130,18 @@ public class ServerUserHandler implements Runnable{
      * @param input
      * @return
      */
-    private List<Chunk> inputMessageManager(String input){
-        List<Chunk> ret = null;
+    private Chunk inputMessageManager(String input){
+        Chunk ret = null;
         if(input.contains("GET ")){
             String file = FileManager.extractFilePath(input);
             this.file_Wanted.add(file);
             byte[] data = file.getBytes(StandardCharsets.UTF_8);
-            ret = Chunk.fromByteArray(data, (byte) 3);
+            ret = new Chunk(data,data.length,0,true,(byte) 3);
         }
         else if(input.toLowerCase().contains("exit")){
-            Chunk tmp = new Chunk((byte) 8);
-            ret = new ArrayList<>();
-            ret.add(tmp);
+            ret = new Chunk((byte) 8);
         }
 
         return ret;
     }
-
-
-
 }

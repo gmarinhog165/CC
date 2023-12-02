@@ -18,9 +18,11 @@ public class NodeHandler implements Runnable{
             byte[] receiveData = new byte[1024];
 
             while (true) {
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, 1024);
                 serverSocket.receive(receivePacket);
-                Thread go = new Thread(new ProcessBNodes(receivePacket.getAddress(), receivePacket.getPort(), receivePacket.getData()));
+                byte[] asd = receivePacket.getData();
+                BNodes c = BNodes.readByteArray(asd);
+                Thread go = new Thread(new ProcessBNodes(receivePacket.getAddress(), receivePacket.getPort(), c));
                 go.start();
             }
         } catch (IOException e) {

@@ -1,6 +1,7 @@
 package Server;
 
 import cmd.Chunk;
+import cmd.ConnectionTCP;
 
 import java.io.*;
 import java.net.Socket;
@@ -9,56 +10,79 @@ import java.util.*;
 public class ClientHandler implements Runnable{
     private Socket clientSocket;
     private FS_Tracker server;
+    private ConnectionTCP con;
 
-    public ClientHandler(Socket clientSocket, FS_Tracker server) {
+    public ClientHandler(Socket clientSocket, FS_Tracker server) throws IOException {
         this.clientSocket = clientSocket;
         this.server = server;
+        this.con = new ConnectionTCP(clientSocket);
     }
 
     @Override
     public void run() {
         try {
-            InputStream in = clientSocket.getInputStream();
-            OutputStream out = clientSocket.getOutputStream();
-
-            // forma de ler dados do cliente
-            byte[] buffer = new byte[1000]; // chega um chunk de cada vez por isso podia ser mais, mas cada so tem 1000bytes
-            int bytesRead;
-            // List<Chunk> chunks = new ArrayList<>(); no caso de receber mais do que um chunk, mas acho q nao
-            while ((bytesRead = in.read(buffer)) != -1) {
+            while (true) {
                 // dar deserialize para chunk
-                Chunk data = Chunk.readByteArray(Arrays.copyOf(buffer, bytesRead));
+                Chunk data = con.receive();
                 System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
 
 
                 // MESSAGE MANAGER
+
+                // file
                 byte msg = data.getMsg();
                 if(msg == (byte) 1){
                     this.server.writeFileOnHashMsg1(data, clientSocket.getInetAddress().getHostAddress());
                 }
+
+                //lista sha-1
+                else if (msg == (byte) 2){
+                    List<Chunk> tmp = new ArrayList<>();
+                    int limit = data.getOffset();
+                    String path = new String(data.getData());
+
+                    for(int k = 0; k < limit; k++){
+                        Chunk c = con.receive();
+                        tmp.add(c);
+                        con.send(new Chunk((byte) 9));
+                    }
+                    this.server.insertSH1(tmp, path);
+                }
+
                 else if(msg == (byte) 8){
-                    Chunk tmp = new Chunk((byte) 8);
-                    out.write(Chunk.toByteArray(tmp));
-                    out.flush();
+                    con.send(new Chunk((byte) 8));
                     this.server.deleteNode(clientSocket.getInetAddress().getHostAddress());
                     break;
                 }
+
                 else if(msg == (byte) 3){
                     String file = new String(data.getData());
                     if(server.contains(file)){
                         List<Chunk> chunks = Chunk.fromByteArray(serializeMap(this.server.getInfoFile(file)), (byte) 5);
+                        con.send(new Chunk(new byte[0], chunks.size(), 0, false, (byte) 3));
                         for(Chunk c : chunks){
-                            out.write(Chunk.toByteArray(c));
-                            out.flush();
-                            int bitsread = in.read(buffer); // ACK para nao perder cenas
+                            con.send(c); // ACK para nao perder cenas
+                            con.receive();
+                        }
+
+                        // enviar SHA-1s
+                        Map<Integer, byte[]> map = this.server.getSHA1(file);
+                        byte[] smap = serializeSHA1(map);
+                        List<Chunk> tmp2 = Chunk.fromByteArray(smap, (byte) 6);
+                        int len = tmp2.size();
+                        con.send(new Chunk(new byte[0], tmp2.size(), 0, false, (byte) 6));
+                        for(Chunk c : tmp2){
+                            con.send(c); // ACK para nao perder cenas
+                            con.receive();
                         }
                     }
                     else{
-                        Chunk naoExiste = new Chunk((byte) 7);
-                        out.write(Chunk.toByteArray(naoExiste));
-                        out.flush();
+                        con.send(new Chunk((byte) 7));
                     }
+                }
 
+                else if (msg == (byte) 0){
+                    this.server.writeChunkOnHashMsg0(data, clientSocket.getInetAddress().getHostAddress());
                 }
             }
 
@@ -74,7 +98,15 @@ public class ClientHandler implements Runnable{
      * @return
      * @throws IOException
      */
-    private byte[] serializeMap(Map<Integer, List<String>> map) throws IOException {
+    private byte[] serializeMap(Map<Integer, Set<String>> map) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
+            objectOutputStream.writeObject(map);
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
+
+    private byte[] serializeSHA1(Map<Integer, byte[]> map) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(map);

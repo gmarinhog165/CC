@@ -18,13 +18,18 @@ public class FS_Tracker {
      * * Cuja Key é o nº do chunk
      * * Valor é a lista dos IPs dos Nodes que tem o Chunk
      */
-    private Map<String, Map<Integer, List<String>>> catalogo_chunks;
+    private Map<String, Map<Integer, Set<String>>> catalogo_chunks;
     /**
      * hash que indica que files tem cada node
      */
     private Map<String, Set<String>> nodes_files;
 
-    // -> Map<Integer, SHA-1>
+    /**
+     *     Key : Nome File
+     *     Value.Key: Chunk
+     *     Value.Value: SHA-1
+      */
+    private Map<String, Map<Integer, byte[]>> SHA_1;
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
     Lock writel = catalogo.writeLock();
     Lock readl = catalogo.readLock();
@@ -32,10 +37,30 @@ public class FS_Tracker {
     public FS_Tracker(){
         this.catalogo_chunks = new HashMap<>();
         this.nodes_files = new HashMap<>();
+        this.SHA_1 = new HashMap<>();
     }
 
-    public Map<Integer, List<String>> getInfoFile(String file){
-        return this.catalogo_chunks.get(file);
+    public void insertSH1(List<Chunk> chunks, String path){
+        Map<Integer, byte[]> csha = new HashMap<>();
+        for(Chunk c : chunks){
+            byte[] value = c.getData();
+            int key = c.getNum();
+            csha.put(key,value);
+        }
+        this.SHA_1.put(path,csha);
+    }
+
+    public Map<Integer, byte[]> getSHA1(String file){
+        return this.SHA_1.get(file);
+    }
+    public Map<Integer, Set<String>> getInfoFile(String file){
+        this.readl.lock();
+        try{
+            return this.catalogo_chunks.get(file);
+        } finally {
+            this.readl.unlock();
+        }
+
     }
 
     /**
@@ -54,16 +79,16 @@ public class FS_Tracker {
             this.writel.lock();
             // caso o file seja repetido
             if(this.catalogo_chunks.containsKey(name)){
-                Map<Integer, List<String>> tmp = this.catalogo_chunks.get(name);
+                Map<Integer, Set<String>> tmp = this.catalogo_chunks.get(name);
                 for(int i = 1; i <= nchunks; i++){
                     // caso já haja algum Node com este chunk
                     if(tmp.containsKey(i)){
-                        List<String> tmp2 = tmp.get(i);
+                        Set<String> tmp2 = tmp.get(i);
                         tmp2.add(ip);
                     }
                     // caso nao haja nenhum node com este chunk
                     else {
-                        List<String> tmp2 = new ArrayList<>();
+                        Set<String> tmp2 = new HashSet<>();
                         tmp2.add(ip);
                         tmp.put(i, tmp2);
                     }
@@ -71,13 +96,13 @@ public class FS_Tracker {
             }
             // caso o file seja novo
             else{
-                Map<Integer, List<String>> tmp2 = new HashMap<>();
+                Map<Integer, Set<String>> tmp2 = new HashMap<>();
                 for(int i = 1; i <= nchunks; i++){
-                    List<String> tmp3 = new ArrayList<>();
+                    Set<String> tmp3 = new HashSet<>();
                     tmp3.add(ip);
                     tmp2.put(i,tmp3);
                 }
-                List<String> t = new ArrayList<>();
+                Set<String> t = new HashSet<>();
                 t.add(String.valueOf(chunks%986));
                 tmp2.put(-1, t);
                 this.catalogo_chunks.put(name, tmp2);
@@ -115,11 +140,11 @@ public class FS_Tracker {
     public void deleteNode(String ip){
         Set<String> tmp = this.nodes_files.get(ip);
         for(String c : tmp){
-            Map<Integer, List<String>> chunkIP = this.catalogo_chunks.get(c);
-            for (List<String> ipList : chunkIP.values()) {
+            Map<Integer, Set<String>> chunkIP = this.catalogo_chunks.get(c);
+            for (Set<String> ipList : chunkIP.values()) {
                 ipList.removeIf(k -> k.equals(ip));
             }
-            chunkIP.values().removeIf(List::isEmpty);
+            chunkIP.values().removeIf(Set::isEmpty);
 
             if (chunkIP.isEmpty()) {
                 this.catalogo_chunks.remove(c);
@@ -130,6 +155,27 @@ public class FS_Tracker {
 
     public static int calculateNumChunks(int totalBytes) {
         return (int) Math.ceil((double) totalBytes / 986);
+    }
+
+    public void writeChunkOnHashMsg0(Chunk chunk, String ip){
+        this.writel.lock();
+        try{
+            String name = new String(chunk.getData());
+            int numchunk = chunk.getNum();
+            Map<Integer, Set<String>> tmp = this.catalogo_chunks.get(name);
+            if(tmp.containsKey(numchunk)){
+                Set<String> tmp2 = tmp.get(numchunk);
+                tmp2.add(ip);
+            }
+            // caso nao haja nenhum node com este chunk
+            else {
+                Set<String> tmp2 = new HashSet<>();
+                tmp2.add(ip);
+                tmp.put(numchunk, tmp2);
+            }
+        } finally {
+            this.writel.unlock();
+        }
     }
 
 }

@@ -1,31 +1,36 @@
 package Client;
 
 import cmd.Chunk;
+import cmd.ConnectionTCP;
 import cmd.FileManager;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class TaskManager implements Runnable{
-    private Socket socket;
+    private ConnectionTCP con;
     private List<Chunk> chunksDoMap;
+    private List<Chunk> shas1DoMap;
     private String file;
 
-    public TaskManager(Socket socket, List<Chunk> um, String file){
-        this.socket = socket;
+    public TaskManager(ConnectionTCP con, List<Chunk> um, String file, List<Chunk> shas){
+        this.con = con;
         this.chunksDoMap = um;
         this.file = file;
+        this.shas1DoMap = shas;
     }
 
     @Override
     public void run() {
         try {
             FileManager.createEmptyFile(FileManager.getFileName(this.file));
-            messageManager(this.chunksDoMap);
+            messageManager(this.chunksDoMap, this.shas1DoMap);
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -39,9 +44,15 @@ public class TaskManager implements Runnable{
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    public void messageManager(List<Chunk> data) throws IOException, ClassNotFoundException, InterruptedException {
-        // TO DO: falta o caso da mensagem ser do tipo 6 -> lista de SHA-1
+    public void messageManager(List<Chunk> data, List<Chunk> shas) throws IOException, ClassNotFoundException, InterruptedException {
+        // SHA-1
+        ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
+        for(Chunk c : shas){
+            outputStream2.write(c.getData());
+        }
+        Map<Integer, byte[]> sha1s = deserializeShas(outputStream2.toByteArray());
 
+        // Catalogo
         if(data.get(0).getMsg() == (byte) 5){
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // juntar todos os chunks de data correspondentes
@@ -49,9 +60,9 @@ public class TaskManager implements Runnable{
                 outputStream.write(c.getData());
             }
             // dar deserialize do byte[]
-            Map<Integer, List<String>> catalogo = deserializeMap(outputStream.toByteArray());
+            Map<Integer, Set<String>> catalogo = deserializeMap(outputStream.toByteArray());
             // length do ultimo chunk
-            int lenlastchunk = Integer.parseInt(catalogo.remove(-1).get(0));
+            int lenlastchunk = Integer.parseInt(new ArrayList<>(catalogo.remove(-1)).get(0));
             // número do último chunk
             int lastchunk = catalogo.keySet().stream()
                     .max(Integer::compare)
@@ -59,23 +70,29 @@ public class TaskManager implements Runnable{
 
             Map<String, List<Integer>> locs = algoritmo(catalogo);
 
-            ExecutorService executor = Executors.newFixedThreadPool(5);
-            for(Map.Entry<String, List<Integer>> d : locs.entrySet()){
-                String ip = d.getKey();
-                List<Integer> chunks = d.getValue();
-                for(int b : chunks){
-                    Runnable worker;
-                    if(b == lastchunk){
-                        worker = new NodeSend(socket, ip, b, lenlastchunk, this.file);
-                    } else {
-                        worker = new NodeSend(socket, ip, b, 986, this.file);
-                    }
-                    executor.execute(worker);
+            try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
+                for (Map.Entry<String, List<Integer>> d : locs.entrySet()) {
+                    String ip = d.getKey();
+                    List<Integer> chunks = d.getValue();
+                    ReentrantLock lock = new ReentrantLock();
+                    for (int b : chunks) {
+                        Runnable worker;
+                        if (b == lastchunk) {
+                            worker = new NodeSend(this.con, ip, b, lenlastchunk, this.file, lock, sha1s.get(b));
+                        } else {
+                            worker = new NodeSend(this.con, ip, b, 986, this.file, lock, sha1s.get(b));
+                        }
 
+                        executor.execute(worker);
+                        byte[] asd = this.file.getBytes(StandardCharsets.UTF_8);
+                        Chunk c = new Chunk(asd, asd.length, 0, true, (byte) 0, b-1);
+                        con.send(c);
+
+                    }
+                    executor.shutdown();
+                    while (!executor.isTerminated()) ;
+                    System.out.println("File transfer is complete!");
                 }
-                executor.shutdown();
-                while (!executor.isTerminated());
-                System.out.println("Finished all threads");
             }
         }
     }
@@ -87,10 +104,17 @@ public class TaskManager implements Runnable{
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private Map<Integer, List<String>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
+    private Map<Integer, Set<String>> deserializeMap(byte[] serializedData) throws IOException, ClassNotFoundException {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serializedData);
              ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
-            return (Map<Integer, List<String>>) objectInputStream.readObject();
+            return (Map<Integer, Set<String>>) objectInputStream.readObject();
+        }
+    }
+
+    private Map<Integer, byte[]> deserializeShas(byte[] serializedData) throws IOException, ClassNotFoundException {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serializedData);
+             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
+            return (Map<Integer, byte[]>) objectInputStream.readObject();
         }
     }
 
@@ -100,7 +124,7 @@ public class TaskManager implements Runnable{
      * @param chunkMap
      * @return
      */
-    private static Map<String, List<Integer>> algoritmo(Map<Integer, List<String>> chunkMap) {
+    private static Map<String, List<Integer>> algoritmo(Map<Integer, Set<String>> chunkMap) {
         // Extract the list of IP addresses from the chunkMap
         List<String> ipAddresses = chunkMap.values().stream()
                 .flatMap(Collection::stream)
@@ -122,9 +146,9 @@ public class TaskManager implements Runnable{
             balancedChunks.put(ipAddress, new ArrayList<>());
         }
 
-        for (Map.Entry<Integer, List<String>> entry : chunkMap.entrySet()) {
+        for (Map.Entry<Integer, Set<String>> entry : chunkMap.entrySet()) {
             int chunkNumber = entry.getKey();
-            List<String> ipsWithChunk = entry.getValue();
+            Set<String> ipsWithChunk = entry.getValue();
 
             // Find the IP with the lowest load
             String minLoadIp = ipAddresses.get(0);
