@@ -89,10 +89,10 @@ public class TaskManager implements Runnable{
                         con.send(c);
 
                     }
-                    executor.shutdown();
-                    while (!executor.isTerminated()) ;
-                    System.out.println("File transfer is complete!");
                 }
+                executor.shutdown();
+                while (!executor.isTerminated()) ;
+                System.out.println("File transfer is complete!");
             }
         }
     }
