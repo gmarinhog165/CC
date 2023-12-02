@@ -83,6 +83,7 @@ public class ClientHandler implements Runnable{
 
                 else if (msg == (byte) 0){
                     this.server.writeChunkOnHashMsg0(data, clientSocket.getInetAddress().getHostAddress());
+                    con.send(new Chunk((byte) 9));
                 }
             }
 

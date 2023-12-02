@@ -41,13 +41,15 @@ public class FS_Tracker {
     }
 
     public void insertSH1(List<Chunk> chunks, String path){
-        Map<Integer, byte[]> csha = new HashMap<>();
-        for(Chunk c : chunks){
-            byte[] value = c.getData();
-            int key = c.getNum();
-            csha.put(key,value);
+        if(!this.SHA_1.containsKey(path)){
+            Map<Integer, byte[]> csha = new HashMap<>();
+            for(Chunk c : chunks){
+                byte[] value = c.getData();
+                int key = c.getNum();
+                csha.put(key,value);
+            }
+            this.SHA_1.put(path,csha);
         }
-        this.SHA_1.put(path,csha);
     }
 
     public Map<Integer, byte[]> getSHA1(String file){

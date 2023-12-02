@@ -75,7 +75,7 @@ public class ServerUserHandler implements Runnable{
                         System.out.println("O comando introduzido é inválido!");
                     } else if (message.getMsg() == (byte) 8){
                         contcp.send(message);
-                        System.exit(0);
+                        //System.exit(0);
                     }
                     else {
                         contcp.send(message);
@@ -113,8 +113,6 @@ public class ServerUserHandler implements Runnable{
                         Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS));
                         toexec.start();
                         this.file_Wanted.remove(0);
-                        System.out.println("ServerUserHandler::run:: FILE NAME: " +path1);
-                        //chunksDoMap.clear();
                         break;
                     }
 

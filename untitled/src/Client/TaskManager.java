@@ -71,10 +71,10 @@ public class TaskManager implements Runnable{
             Map<String, List<Integer>> locs = algoritmo(catalogo);
 
             try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
+                ReentrantLock lock = new ReentrantLock();
                 for (Map.Entry<String, List<Integer>> d : locs.entrySet()) {
                     String ip = d.getKey();
                     List<Integer> chunks = d.getValue();
-                    ReentrantLock lock = new ReentrantLock();
                     for (int b : chunks) {
                         Runnable worker;
                         if (b == lastchunk) {
@@ -87,6 +87,7 @@ public class TaskManager implements Runnable{
                         byte[] asd = this.file.getBytes(StandardCharsets.UTF_8);
                         Chunk c = new Chunk(asd, asd.length, 0, true, (byte) 0, b);
                         con.send(c);
+                        con.receive();
 
                     }
                 }
