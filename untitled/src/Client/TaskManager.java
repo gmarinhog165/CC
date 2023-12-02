@@ -85,7 +85,7 @@ public class TaskManager implements Runnable{
 
                         executor.execute(worker);
                         byte[] asd = this.file.getBytes(StandardCharsets.UTF_8);
-                        Chunk c = new Chunk(asd, asd.length, 0, true, (byte) 0, b-1);
+                        Chunk c = new Chunk(asd, asd.length, 0, true, (byte) 0, b);
                         con.send(c);
 
                     }
