@@ -18,12 +18,14 @@ public class TaskManager implements Runnable{
     private List<Chunk> chunksDoMap;
     private List<Chunk> shas1DoMap;
     private String file;
+    private DNStable dns;
 
-    public TaskManager(ConnectionTCP con, List<Chunk> um, String file, List<Chunk> shas){
+    public TaskManager(ConnectionTCP con, List<Chunk> um, String file, List<Chunk> shas, DNStable dns){
         this.con = con;
         this.chunksDoMap = um;
         this.file = file;
         this.shas1DoMap = shas;
+        this.dns = dns;
     }
 
     @Override
@@ -73,14 +75,14 @@ public class TaskManager implements Runnable{
             try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
                 ReentrantLock lock = new ReentrantLock();
                 for (Map.Entry<String, List<Integer>> d : locs.entrySet()) {
-                    String ip = d.getKey();
+                    String hostName = d.getKey();
                     List<Integer> chunks = d.getValue();
                     for (int b : chunks) {
                         Runnable worker;
                         if (b == lastchunk) {
-                            worker = new NodeSend(this.con, ip, b, lenlastchunk, this.file, lock, sha1s.get(b));
+                            worker = new NodeSend(this.con, hostName, b, lenlastchunk, this.file, lock, sha1s.get(b), this.dns);
                         } else {
-                            worker = new NodeSend(this.con, ip, b, 986, this.file, lock, sha1s.get(b));
+                            worker = new NodeSend(this.con, hostName, b, 986, this.file, lock, sha1s.get(b), this.dns);
                         }
 
                         executor.execute(worker);

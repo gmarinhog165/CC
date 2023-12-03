@@ -24,7 +24,7 @@ public class FS_Track_Protocol {
             while (true) {
                 // aceita a conexão do cliente
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("Client connected: " + clientSocket.getInetAddress());
+                System.out.println("Client connected: " + clientSocket.getInetAddress().getHostName());
 
                 // Cria um thread para cada cliente
                 Thread clientThread = new Thread(new ClientHandler(clientSocket, server));

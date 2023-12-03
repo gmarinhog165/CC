@@ -13,38 +13,51 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class NodeSend implements Runnable{
     private ConnectionTCP con;
-    private String ip;
+    private String hostName;
     private int chunk;
     private int length;
     private ReentrantLock lock;
     private byte[] sha_1;
-
+    private DNStable dns;
     private String path;
 
-    public NodeSend(ConnectionTCP con, String ip, int chunks, int length, String path, ReentrantLock lock, byte[] sha1){
-        this.ip = ip;
+    public NodeSend(ConnectionTCP con, String ip, int chunks, int length, String path, ReentrantLock lock, byte[] sha1, DNStable dns){
+        this.hostName = ip;
         this.chunk = chunks;
         this.length = length;
         this.con = con;
         this.path = path;
         this.lock = lock;
         this.sha_1 = sha1;
+        this.dns = dns;
     }
 
     @Override
     public void run() {
-        System.out.println("Thread " + Thread.currentThread().getId() + " is executing. IP: " + ip + ", Chunk: " + chunk);
+        System.out.println("Thread " + Thread.currentThread().getId() + " is executing. Host: " + this.hostName  + ", Chunk: " + chunk);
 
         try {
             BNodes rcvd = null;
             do{
                 // enviar pedido de info do chunk que quer
                 DatagramSocket clientSocket = new DatagramSocket();
-                InetAddress serverAddress = InetAddress.getByName(this.ip);
+
+                // verificar se já conhece ou vai determinar o IP
+                InetAddress serverAddress;
+                if(this.dns.containsKey(this.hostName)){
+                    String ip = this.dns.getIP(this.hostName);
+                    serverAddress  = InetAddress.getByName(ip);
+                }
+                else{
+                    serverAddress = InetAddress.getByName(this.hostName);
+                    this.dns.insertIP(this.hostName, serverAddress.getHostAddress());
+                }
+
                 byte[] asd = path.getBytes(StandardCharsets.UTF_8);
                 BNodes tosend = new BNodes(asd, asd.length, chunk, length, (byte) 1);
                 byte[] sendData = BNodes.toByteArray(tosend);
@@ -81,13 +94,5 @@ public class NodeSend implements Runnable{
     private byte[] convertToSHA1(byte[] input) throws NoSuchAlgorithmException {
         MessageDigest sha1Digest = MessageDigest.getInstance("SHA-1");
         return sha1Digest.digest(input);
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte b : bytes) {
-            result.append(String.format("%02X", b));
-        }
-        return result.toString();
     }
 }

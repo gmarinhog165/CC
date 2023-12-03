@@ -1,6 +1,7 @@
 package Client;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class FS_Node {
@@ -13,7 +14,7 @@ public class FS_Node {
     public void connectionServerTCP(String ip, String port) {
         int serverPort = Integer.parseInt(port);
         try {
-            Socket socket = new Socket(ip, serverPort);
+            Socket socket = new Socket(InetAddress.getByName(ip), serverPort);
             System.out.println("Connected to the server at " + ip + ":" + serverPort);
 
             Thread sendDataToTracker = new Thread(new ServerUserHandler(socket, this.file_path));

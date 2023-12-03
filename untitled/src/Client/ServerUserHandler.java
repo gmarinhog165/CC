@@ -10,18 +10,23 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-public class ServerUserHandler implements Runnable{
+public class ServerUserHandler implements Runnable {
     private Socket socket;
     private String file_path;
     private List<String> file_Wanted = new ArrayList<>();
     private ConnectionTCP contcp;
+    private DNStable dns;
+
 
     public ServerUserHandler(Socket socket, String path) throws IOException {
         this.socket = socket;
         this.file_path = path;
         this.contcp = new ConnectionTCP(socket);
+        this.dns = new DNStable();
     }
 
     /**
@@ -110,7 +115,7 @@ public class ServerUserHandler implements Runnable{
                         }
 
                         String path1 = this.file_Wanted.get(0);
-                        Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS));
+                        Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS, this.dns));
                         toexec.start();
                         this.file_Wanted.remove(0);
                         break;

@@ -73,7 +73,7 @@ public class FS_Tracker {
      * @param chunk
      * @param ip
      */
-    public void writeFileOnHashMsg1(Chunk chunk, String ip){
+    public void writeFileOnHashMsg1(Chunk chunk, String hostName){
         String name = new String(chunk.getData());
         int chunks = chunk.getNum();
         int nchunks = calculateNumChunks(chunks);
@@ -86,12 +86,12 @@ public class FS_Tracker {
                     // caso já haja algum Node com este chunk
                     if(tmp.containsKey(i)){
                         Set<String> tmp2 = tmp.get(i);
-                        tmp2.add(ip);
+                        tmp2.add(hostName);
                     }
                     // caso nao haja nenhum node com este chunk
                     else {
                         Set<String> tmp2 = new HashSet<>();
-                        tmp2.add(ip);
+                        tmp2.add(hostName);
                         tmp.put(i, tmp2);
                     }
                 }
@@ -101,7 +101,7 @@ public class FS_Tracker {
                 Map<Integer, Set<String>> tmp2 = new HashMap<>();
                 for(int i = 1; i <= nchunks; i++){
                     Set<String> tmp3 = new HashSet<>();
-                    tmp3.add(ip);
+                    tmp3.add(hostName);
                     tmp2.put(i,tmp3);
                 }
                 Set<String> t = new HashSet<>();
@@ -111,14 +111,14 @@ public class FS_Tracker {
             }
 
 
-            if(this.nodes_files.containsKey(ip)){
-                Set<String> tt = this.nodes_files.get(ip);
+            if(this.nodes_files.containsKey(hostName)){
+                Set<String> tt = this.nodes_files.get(hostName);
                 tt.add(name);
             }
             else{
                 Set<String> tt2 = new HashSet<>();
                 tt2.add(name);
-                this.nodes_files.put(ip, tt2);
+                this.nodes_files.put(hostName, tt2);
             }
 
         } finally {
@@ -137,14 +137,14 @@ public class FS_Tracker {
 
     /**
      * Método que apaga toda a informação de um node quando este desconecta
-     * @param ip
+     * @param hostName
      */
-    public void deleteNode(String ip){
-        Set<String> tmp = this.nodes_files.get(ip);
+    public void deleteNode(String hostName){
+        Set<String> tmp = this.nodes_files.get(hostName);
         for(String c : tmp){
             Map<Integer, Set<String>> chunkIP = this.catalogo_chunks.get(c);
             for (Set<String> ipList : chunkIP.values()) {
-                ipList.removeIf(k -> k.equals(ip));
+                ipList.removeIf(k -> k.equals(hostName));
             }
             chunkIP.values().removeIf(Set::isEmpty);
 
@@ -152,14 +152,14 @@ public class FS_Tracker {
                 this.catalogo_chunks.remove(c);
             }
         }
-        this.nodes_files.remove(ip);
+        this.nodes_files.remove(hostName);
     }
 
     public static int calculateNumChunks(int totalBytes) {
         return (int) Math.ceil((double) totalBytes / 986);
     }
 
-    public void writeChunkOnHashMsg0(Chunk chunk, String ip){
+    public void writeChunkOnHashMsg0(Chunk chunk, String hostName){
         this.writel.lock();
         try{
             String name = new String(chunk.getData());
@@ -167,12 +167,12 @@ public class FS_Tracker {
             Map<Integer, Set<String>> tmp = this.catalogo_chunks.get(name);
             if(tmp.containsKey(numchunk)){
                 Set<String> tmp2 = tmp.get(numchunk);
-                tmp2.add(ip);
+                tmp2.add(hostName);
             }
             // caso nao haja nenhum node com este chunk
             else {
                 Set<String> tmp2 = new HashSet<>();
-                tmp2.add(ip);
+                tmp2.add(hostName);
                 tmp.put(numchunk, tmp2);
             }
         } finally {

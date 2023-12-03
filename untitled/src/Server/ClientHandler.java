@@ -24,7 +24,7 @@ public class ClientHandler implements Runnable{
             while (true) {
                 // dar deserialize para chunk
                 Chunk data = con.receive();
-                System.out.println("Received chunk with message " + new String(data.getData()) + " from IP: " + clientSocket.getInetAddress());
+                System.out.println("Received chunk with message " + new String(data.getData()) + " from: " + clientSocket.getInetAddress().getHostName());
 
 
                 // MESSAGE MANAGER
@@ -51,7 +51,7 @@ public class ClientHandler implements Runnable{
 
                 else if(msg == (byte) 8){
                     con.send(new Chunk((byte) 8));
-                    this.server.deleteNode(clientSocket.getInetAddress().getHostAddress());
+                    this.server.deleteNode(clientSocket.getInetAddress().getHostName());
                     break;
                 }
 
@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable{
                 }
 
                 else if (msg == (byte) 0){
-                    this.server.writeChunkOnHashMsg0(data, clientSocket.getInetAddress().getHostAddress());
+                    this.server.writeChunkOnHashMsg0(data, clientSocket.getInetAddress().getHostName());
                     con.send(new Chunk((byte) 9));
                 }
             }
