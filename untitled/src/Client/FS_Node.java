@@ -13,12 +13,13 @@ public class FS_Node {
 
     public void connectionServerTCP(String ip, String port) {
         int serverPort = Integer.parseInt(port);
+        DNStable dns = new DNStable();
         try {
             Socket socket = new Socket(InetAddress.getByName(ip), serverPort);
             System.out.println("Connected to the server at " + ip + ":" + serverPort);
 
-            Thread sendDataToTracker = new Thread(new ServerUserHandler(socket, this.file_path));
-            Thread receiveDataFromNodes = new Thread(new NodeHandler());
+            Thread sendDataToTracker = new Thread(new ServerUserHandler(socket, this.file_path, dns));
+            Thread receiveDataFromNodes = new Thread(new NodeHandler(dns));
             sendDataToTracker.start();
             receiveDataFromNodes.start();
             sendDataToTracker.join();

@@ -35,6 +35,16 @@ public class ClientHandler implements Runnable{
                     this.server.writeFileOnHashMsg1(data, clientSocket.getInetAddress().getHostAddress());
                 }
 
+                else if(msg == (byte) 11){
+                    List<String> tmp = this.server.getAllHosts();
+                    con.send(new Chunk(new byte[0], 0, tmp.size(), true, (byte) 11));
+                    for(String c : tmp){
+                        byte[] dat = c.getBytes();
+                        con.send(new Chunk(dat,dat.length,0,false,(byte) 11));
+                        con.receive();
+                    }
+                }
+
                 //lista sha-1
                 else if (msg == (byte) 2){
                     List<Chunk> tmp = new ArrayList<>();

@@ -20,13 +20,14 @@ public class ServerUserHandler implements Runnable {
     private List<String> file_Wanted = new ArrayList<>();
     private ConnectionTCP contcp;
     private DNStable dns;
+    private Map<String, Long> rtts = new HashMap<>();
 
 
-    public ServerUserHandler(Socket socket, String path) throws IOException {
+    public ServerUserHandler(Socket socket, String path, DNStable dns) throws IOException {
         this.socket = socket;
         this.file_path = path;
         this.contcp = new ConnectionTCP(socket);
-        this.dns = new DNStable();
+        this.dns = dns;
     }
 
     /**
@@ -68,6 +69,19 @@ public class ServerUserHandler implements Runnable {
                 contcp.send(k);
                 contcp.receive();
             }
+
+
+            contcp.send(new Chunk((byte) 11));
+            int sizeList = contcp.receive().getOffset();
+            List<String> cnks = new ArrayList<>();
+            for(int i = 0; i < sizeList; i++){
+                cnks.add(new String(contcp.receive().getData()));
+                contcp.send(new Chunk((byte) 9));
+            }
+
+            Thread pp = new Thread(new RTTHandler(this.dns, this.rtts, cnks));
+            pp.start();
+
 
 
             boolean loop = true;

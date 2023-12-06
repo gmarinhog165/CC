@@ -33,6 +33,7 @@ public class FS_Tracker {
     private ReentrantReadWriteLock catalogo = new ReentrantReadWriteLock();
     Lock writel = catalogo.writeLock();
     Lock readl = catalogo.readLock();
+    private List<String> nodes = new ArrayList<>();
 
     public FS_Tracker(){
         this.catalogo_chunks = new HashMap<>();
@@ -119,6 +120,7 @@ public class FS_Tracker {
                 Set<String> tt2 = new HashSet<>();
                 tt2.add(name);
                 this.nodes_files.put(hostName, tt2);
+                this.nodes.add(hostName);
             }
 
         } finally {
@@ -180,4 +182,7 @@ public class FS_Tracker {
         }
     }
 
+    public List<String> getAllHosts(){
+        return new ArrayList<>(this.nodes);
+    }
 }

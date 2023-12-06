@@ -5,10 +5,13 @@ import cmd.BNodes;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 
 public class NodeHandler implements Runnable{
-    public NodeHandler() {
+    private DNStable dns;
+    public NodeHandler(DNStable dns) {
+        this.dns = dns;
     }
 
     @Override
@@ -22,8 +25,16 @@ public class NodeHandler implements Runnable{
                 serverSocket.receive(receivePacket);
                 byte[] asd = receivePacket.getData();
                 BNodes c = BNodes.readByteArray(asd);
-                Thread go = new Thread(new ProcessBNodes(receivePacket.getAddress(), receivePacket.getPort(), c));
-                go.start();
+                if(c.getMsg() == (byte) 1){
+                    Thread go = new Thread(new ProcessBNodes(receivePacket.getAddress(), receivePacket.getPort(), c));
+                    go.start();
+                }
+                else{
+                    InetAddress ip = receivePacket.getAddress();
+                    String hostname = ip.getHostName();
+                    if(!this.dns.containsKey(hostname))
+                        this.dns.insertIP(hostname, ip.getHostAddress());
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
