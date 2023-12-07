@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable{
                 // file
                 byte msg = data.getMsg();
                 if(msg == (byte) 1){
-                    this.server.writeFileOnHashMsg1(data, clientSocket.getInetAddress().getHostAddress());
+                    this.server.writeFileOnHashMsg1(data, clientSocket.getInetAddress().getHostName());
                 }
 
                 else if(msg == (byte) 11){

@@ -20,7 +20,7 @@ public class ServerUserHandler implements Runnable {
     private List<String> file_Wanted = new ArrayList<>();
     private ConnectionTCP contcp;
     private DNStable dns;
-    private Map<String, Long> rtts = new HashMap<>();
+    private RTTMap rtts = new RTTMap();
 
 
     public ServerUserHandler(Socket socket, String path, DNStable dns) throws IOException {
@@ -78,6 +78,7 @@ public class ServerUserHandler implements Runnable {
                 cnks.add(new String(contcp.receive().getData()));
                 contcp.send(new Chunk((byte) 9));
             }
+            System.out.println("SUH: "+ cnks);
 
             Thread pp = new Thread(new RTTHandler(this.dns, this.rtts, cnks));
             pp.start();
@@ -129,7 +130,7 @@ public class ServerUserHandler implements Runnable {
                         }
 
                         String path1 = this.file_Wanted.get(0);
-                        Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS, this.dns));
+                        Thread toexec = new Thread(new TaskManager(this.contcp, chunksDoMap, path1, toDS, this.dns, this.rtts));
                         toexec.start();
                         this.file_Wanted.remove(0);
                         break;

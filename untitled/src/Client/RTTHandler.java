@@ -8,13 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
-
 public class RTTHandler implements Runnable {
     private DNStable dns;
-    private Map<String, Long> rtts;
+    private RTTMap rtts;
     private List<String> hosts;
 
-    public RTTHandler(DNStable dns, Map<String, Long> rtts, List<String> hosts) {
+    public RTTHandler(DNStable dns, RTTMap rtts, List<String> hosts) {
         this.dns = dns;
         this.rtts = rtts;
         this.hosts = hosts;
@@ -28,7 +27,9 @@ public class RTTHandler implements Runnable {
             for(String c : hosts){
                 InetAddress serverAddress = InetAddress.getByName(c);
                 this.dns.insertIP(c, serverAddress.getHostAddress());
+                //System.out.println("RTTHandler:: " + c+ "   " + serverAddress.getHostAddress());
             }
+
 
             while (true) {
                 List<String> hosts = this.dns.getHosts();

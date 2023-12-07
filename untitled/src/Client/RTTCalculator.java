@@ -9,10 +9,10 @@ import java.util.Map;
 public class RTTCalculator implements Runnable {
     private String hostName;
     private DNStable dns;
-    private Map<String, Long> rtts;
+    private RTTMap rtts;
 
 
-    public RTTCalculator(String hostname, DNStable dns, Map<String,Long> rtts) {
+    public RTTCalculator(String hostname, DNStable dns, RTTMap rtts) {
         this.hostName = hostname;
         this.dns = dns;
         this.rtts=rtts;
