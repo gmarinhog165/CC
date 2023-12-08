@@ -34,6 +34,10 @@ public class NodeHandler implements Runnable{
                     String hostname = ip.getHostName();
                     if(!this.dns.containsKey(hostname))
                         this.dns.insertIP(hostname, ip.getHostAddress());
+                    DatagramSocket clientSocket = new DatagramSocket();
+                    DatagramPacket sendPacket = new DatagramPacket(new byte[0], 0, ip, receivePacket.getPort());
+                    clientSocket.send(sendPacket);
+                    clientSocket.close();
                 }
             }
         } catch (IOException e) {

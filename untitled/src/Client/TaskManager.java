@@ -169,13 +169,26 @@ public class TaskManager implements Runnable{
 //        return balancedChunks;
 //    }
 
-    private Map<String, List<Integer>> algoritmo (Map<Integer, Set<String>> catalog) {
+    private Map<String, List<Integer>> algoritmo(Map<Integer, Set<String>> catalog) {
         List<String> ipAddresses = catalog.values().stream()
                 .flatMap(Set::stream)
                 .distinct()
                 .collect(Collectors.toList());
+
         Map<String, Long> rtt = this.rtts.getRtts();
+
         ipAddresses.sort(Comparator.comparingLong(rtt::get));
+
+        Map<String, Double> normalizedRtt = new HashMap<>();
+        for (String ipAddress : ipAddresses) {
+            // Normaliza o RTT para um valor entre 0 e 1
+            normalizedRtt.put(ipAddress, 1.0 / (1.0 + rtt.get(ipAddress)));
+        }
+
+        Map<String, Integer> ipLoad = new HashMap<>();
+        for (String ipAddress : ipAddresses) {
+            ipLoad.put(ipAddress, 0);
+        }
 
         Map<String, List<Integer>> balancedChunks = new HashMap<>();
         for (String ipAddress : ipAddresses) {
@@ -186,12 +199,15 @@ public class TaskManager implements Runnable{
             int chunkNumber = entry.getKey();
             Set<String> ipsWithChunk = entry.getValue();
 
-            String minRttIp = ipAddresses.get(0);
+            // Seleciona o host com a menor carga ponderada (considerando RTT)
+            String minLoadAndRttIp = ipAddresses.stream()
+                    .min(Comparator.comparingDouble(ip -> ipLoad.get(ip) + normalizedRtt.get(ip)))
+                    .orElse(null);
 
-            balancedChunks.get(minRttIp).add(chunkNumber);
-
-            ipAddresses.sort(Comparator.comparingLong(rtt::get));
+            balancedChunks.get(minLoadAndRttIp).add(chunkNumber);
+            ipLoad.put(minLoadAndRttIp, ipLoad.get(minLoadAndRttIp) + 1);
         }
+
         System.out.println(balancedChunks);
         return balancedChunks;
     }
