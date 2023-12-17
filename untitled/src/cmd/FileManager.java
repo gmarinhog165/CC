@@ -5,6 +5,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -161,6 +163,27 @@ public class FileManager {
 
             return baos.toByteArray();
         }
+    }
+
+    public static List<byte[]> calculateSHA1Chunks(String filePath, int chunkSize) {
+        List<byte[]> result = new ArrayList<>();
+
+        try (InputStream inputStream = Files.newInputStream(Paths.get(filePath))) {
+            byte[] buffer = new byte[chunkSize];
+            int bytesRead;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byte[] chunk = new byte[bytesRead];
+                System.arraycopy(buffer, 0, chunk, 0, bytesRead);
+
+                byte[] sha1 = MessageDigest.getInstance("SHA-1").digest(chunk);
+                result.add(sha1);
+            }
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace(); // Handle exceptions appropriately
+        }
+
+        return result;
     }
 
 

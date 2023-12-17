@@ -15,7 +15,6 @@ import java.util.Objects;
  * !!1 -> Tenho File x
  * 2 -> Lista de SHA-1 de cada Chunk
  * !!3 -> Quero File x
- * 4 -> Quero este Chunk do File X
  * !!5 -> Toma a localização do File X
  * 6 -> Toma lista de SHA-1
  * !!7 -> Não existe este File
@@ -30,31 +29,10 @@ public class Chunk {
      * array de bytes que vai conter os dados do file (max 1000 bytes -> MTU Ethernet)
      */
     private byte[] data; // dinâmico
-
-    /**
-     * Na mensagem 2 identifica o nº de chunks num file
-     * Na mensagem 4 identifica o tamanho de byte[]
-     */
     private int length; // 4bytes
-
-    /**
-     * Indica o offset da mensagem
-     */
     private int offset; // 4bytes
-
-    /**
-     * Indica se é o ultimo chunk
-     */
     private boolean last; // 1byte
-
-    /**
-     * Identifica o tipo de mensagem.
-     */
     private byte msg; // 1 byte
-
-    /**
-     * Identifica o número de chunks
-     */
     private int num;
 
     /**

@@ -31,7 +31,7 @@ public class NodeSend implements Runnable{
     private String path;
     private boolean received = false;
 
-    public NodeSend(ConnectionTCP con, String ip, int chunks, int length, String path, ReentrantLock lock, byte[] sha1, DNStable dns){
+    public  NodeSend(ConnectionTCP con, String ip, int chunks, int length, String path, ReentrantLock lock, byte[] sha1, DNStable dns){
         this.hostName = ip;
         this.chunk = chunks;
         this.length = length;

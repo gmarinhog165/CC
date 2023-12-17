@@ -73,7 +73,6 @@ public class TaskManager implements Runnable{
                     .orElse(null);
 
             Map<String, List<Integer>> locs = algoritmo(catalogo);
-
             try (ExecutorService executor = Executors.newFixedThreadPool(5)) {
                 ReentrantLock lock = new ReentrantLock();
                 for (Map.Entry<String, List<Integer>> d : locs.entrySet()) {
@@ -123,51 +122,6 @@ public class TaskManager implements Runnable{
         }
     }
 
-
-    /**
-     * Protótipo de algoritmo
-     //* @param chunkMap
-     * @return
-     */
-//    private static Map<String, List<Integer>> algoritmo(Map<Integer, Set<String>> chunkMap) {
-//        // Extract the list of IP addresses from the chunkMap
-//        List<String> ipAddresses = chunkMap.values().stream()
-//                .flatMap(Collection::stream)
-//                .distinct()
-//                .collect(Collectors.toList());
-//
-//        // Initialize a map to store the load for each IP
-//        Map<String, Integer> ipLoad = new HashMap<>();
-//        for (String ipAddress : ipAddresses) {
-//            ipLoad.put(ipAddress, 0);
-//        }
-//
-//        // Sort the IP addresses by load in ascending order
-//        ipAddresses.sort(Comparator.comparing(ipLoad::get));
-//
-//        // Initialize the result map
-//        Map<String, List<Integer>> balancedChunks = new HashMap<>();
-//        for (String ipAddress : ipAddresses) {
-//            balancedChunks.put(ipAddress, new ArrayList<>());
-//        }
-//
-//        for (Map.Entry<Integer, Set<String>> entry : chunkMap.entrySet()) {
-//            int chunkNumber = entry.getKey();
-//            Set<String> ipsWithChunk = entry.getValue();
-//
-//            // Find the IP with the lowest load
-//            String minLoadIp = ipAddresses.get(0);
-//
-//            // Assign the chunk to the IP with the lowest load
-//            balancedChunks.get(minLoadIp).add(chunkNumber);
-//            ipLoad.put(minLoadIp, ipLoad.get(minLoadIp) + 1);
-//
-//            // Update the sorted IP addresses list
-//            ipAddresses.sort(Comparator.comparing(ipLoad::get));
-//        }
-//
-//        return balancedChunks;
-//    }
 
     private Map<String, List<Integer>> algoritmo(Map<Integer, Set<String>> catalog) {
         List<String> ipAddresses = catalog.values().stream()

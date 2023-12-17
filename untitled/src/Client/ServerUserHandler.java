@@ -47,11 +47,7 @@ public class ServerUserHandler implements Runnable {
 
 
             // Preparação para mandar a lista com SHA-1 de cada chunk
-            List<byte[]> shas = (FileManager.intoListByteArray(FileManager.readAllFile(file_path)));
-            List<byte[]> sha1List = shas.stream().map(bytes -> {
-                try { return MessageDigest.getInstance("SHA-1").digest(bytes); }
-                catch (NoSuchAlgorithmException e) { throw new RuntimeException(e); }
-            }).toList();
+            List<byte[]> sha1List = FileManager.calculateSHA1Chunks(file_path,986);
             int len = sha1List.size();
             int m = 0;
             List<Chunk> chunkssha1 = new ArrayList<>();
@@ -116,14 +112,14 @@ public class ServerUserHandler implements Runnable {
                         break;
                     }
                     else if(data.getMsg() == (byte) 3){
-                        int i = data.getLength();
+                        int i = data.getOffset();
                         for(int t = 0; t < i; t++){
                             chunksDoMap.add(contcp.receive());
                             contcp.send(new Chunk((byte) 9));
                         }
 
                         List<Chunk> toDS = new ArrayList<>();
-                        int len2 = contcp.receive().getLength();
+                        int len2 = contcp.receive().getOffset();
                         for(int t = 0; t < len2; t++){
                             toDS.add(contcp.receive());
                             contcp.send(new Chunk((byte) 9));

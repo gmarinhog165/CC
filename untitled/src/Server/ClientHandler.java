@@ -69,7 +69,7 @@ public class ClientHandler implements Runnable{
                     String file = new String(data.getData());
                     if(server.contains(file)){
                         List<Chunk> chunks = Chunk.fromByteArray(serializeMap(this.server.getInfoFile(file)), (byte) 5);
-                        con.send(new Chunk(new byte[0], chunks.size(), 0, false, (byte) 3));
+                        con.send(new Chunk(new byte[0], 0, chunks.size(), false, (byte) 3));
                         for(Chunk c : chunks){
                             con.send(c); // ACK para nao perder cenas
                             con.receive();
@@ -80,7 +80,7 @@ public class ClientHandler implements Runnable{
                         byte[] smap = serializeSHA1(map);
                         List<Chunk> tmp2 = Chunk.fromByteArray(smap, (byte) 6);
                         int len = tmp2.size();
-                        con.send(new Chunk(new byte[0], tmp2.size(), 0, false, (byte) 6));
+                        con.send(new Chunk(new byte[0], 0, tmp2.size(), false, (byte) 6));
                         for(Chunk c : tmp2){
                             con.send(c); // ACK para nao perder cenas
                             con.receive();

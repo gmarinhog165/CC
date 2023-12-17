@@ -72,7 +72,7 @@ public class FS_Tracker {
      * Usa locks para garantir que as threads escrevem toda a informação quando o
      * tentam fazer concorrentemente.
      * @param chunk
-     * @param ip
+     * @param hostName
      */
     public void writeFileOnHashMsg1(Chunk chunk, String hostName){
         String name = new String(chunk.getData());
