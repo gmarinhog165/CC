@@ -91,7 +91,7 @@ public class ServerUserHandler implements Runnable {
                         System.out.println("O comando introduzido é inválido!");
                     } else if (message.getMsg() == (byte) 8){
                         contcp.send(message);
-                        //System.exit(0);
+                        break;
                     }
                     else {
                         contcp.send(message);
@@ -108,8 +108,7 @@ public class ServerUserHandler implements Runnable {
                         break;
                     }
                     else if(data.getMsg() == (byte) 8){
-                        loop = false;
-                        break;
+                        System.exit(0);
                     }
                     else if(data.getMsg() == (byte) 3){
                         int i = data.getOffset();
@@ -134,6 +133,7 @@ public class ServerUserHandler implements Runnable {
 
                 }
             }
+            this.socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
